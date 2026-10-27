@@ -17,9 +17,14 @@ import { formatCityTime } from '../engine/astronomy';
 interface HoraMuhurtaViewProps {
   panchanga: PanchangaDay;
   currentTime: Date;
+  onOpenNotificationCenter?: () => void;
 }
 
-export const HoraMuhurtaView: React.FC<HoraMuhurtaViewProps> = ({ panchanga, currentTime }) => {
+export const HoraMuhurtaView: React.FC<HoraMuhurtaViewProps> = ({ 
+  panchanga, 
+  currentTime,
+  onOpenNotificationCenter 
+}) => {
   const { sunMoon, vaara, city } = panchanga;
 
   const horas = useMemo(() => {
@@ -59,6 +64,34 @@ export const HoraMuhurtaView: React.FC<HoraMuhurtaViewProps> = ({ panchanga, cur
 
   return (
     <div className="space-y-6">
+      {onOpenNotificationCenter && (
+        <div className="bg-gradient-to-r from-amber-950/40 via-slate-900/90 to-amber-950/40 border border-amber-500/30 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-amber-100 flex items-center gap-1.5">
+                Local Muhūrta & Choghadiyā Alerts
+                <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                  Live for {city.name}
+                </span>
+              </h4>
+              <p className="text-xs text-slate-400">
+                Receive local browser notifications & sacred temple chime alerts before Abhijit, Brahma Muhūrta, and Rāhu Kāla.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={onOpenNotificationCenter}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-200 text-xs font-semibold transition-all cursor-pointer shadow-sm"
+          >
+            <span>Configure Alerts & Chimes</span>
+          </button>
+        </div>
+      )}
+
       {/* 1. Live Active Windows Highlight Strip */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Active Hora */}

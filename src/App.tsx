@@ -6,7 +6,7 @@ import {
   PanchangaDay, 
   PanchangaMode 
 } from './types/kalayantra';
-import { DEFAULT_CITY } from './engine/kosha';
+import { DEFAULT_CITY, BUILTIN_CITIES } from './engine/kosha';
 import { calculatePanchanga } from './engine/panchanga';
 import { Navbar, AppTab } from './components/Navbar';
 import { HeaderControls } from './components/HeaderControls';
@@ -21,6 +21,18 @@ import { KalaBodhaView } from './components/KalaBodhaView';
 import { KalaVidyaView } from './components/KalaVidyaView';
 import { FestivalDirectoryView } from './components/FestivalDirectoryView';
 import { MyTithisView } from './components/MyTithisView';
+import { SavedView } from './components/SavedView';
+import { NotificationCenterModal } from './components/NotificationCenterModal';
+import { NotificationToastContainer } from './components/NotificationToast';
+import { ActiveToast, ScheduledAlert } from './types/notifications';
+import { 
+  generateDailyAlerts, 
+  findDueAlerts, 
+  loadNotificationPreferences, 
+  saveTriggeredAlertRecord, 
+  dispatchWebNotification 
+} from './engine/notifications';
+import { playAlertChime } from './engine/audioAlert';
 
 export default function App() {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -31,23 +43,133 @@ export default function App() {
   const [language, setLanguage] = useState<Language>('en');
   const [activeTab, setActiveTab] = useState<AppTab>('panchanga');
 
-  // Keep live time ticking every 10 seconds for real-time Horas / Muhurtas
+  // Notification state
+  const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState<boolean>(false);
+  const [activeToasts, setActiveToasts] = useState<ActiveToast[]>([]);
+  const [triggeredIds, setTriggeredIds] = useState<Set<string>>(() => new Set<string>());
+  const [activeAlertsCount, setActiveAlertsCount] = useState<number>(0);
+
+  // Trigger toast helper
+  const handleTriggerToast = (alert: ScheduledAlert) => {
+    const timeFormatted = alert.targetTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const actionTab = alert.type === 'transit' ? 'gochara' : 'muhurta';
+
+    const newToast: ActiveToast = {
+      id: `${alert.id}_${Date.now()}`,
+      title: alert.title,
+      subtitle: alert.subtitle,
+      type: alert.type,
+      timeFormatted,
+      description: alert.description,
+      actionTab,
+    };
+
+    setActiveToasts((prev) => [newToast, ...prev.slice(0, 3)]);
+
+    // Record in history
+    saveTriggeredAlertRecord({
+      id: newToast.id,
+      alertId: alert.id,
+      title: alert.title,
+      subtitle: alert.subtitle,
+      type: alert.type,
+      timestamp: new Date().toISOString(),
+      cityName: alert.cityName,
+      read: false,
+    });
+
+    // Auto dismiss after 9s
+    setTimeout(() => {
+      setActiveToasts((prev) => prev.filter((t) => t.id !== newToast.id));
+    }, 9000);
+  };
+
+  const handleDismissToast = (id: string) => {
+    setActiveToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  // Background interval: keep live time ticking & monitor location-aware Muhurta & Transit alerts
   useEffect(() => {
-    const timer = setInterval(() => {
-      setLiveTime(new Date());
-    }, 10000);
+    const checkAlerts = () => {
+      const now = new Date();
+      setLiveTime(now);
+
+      const prefs = loadNotificationPreferences();
+      if (!prefs.enabled) return;
+
+      // Compute today's alerts for selected city and live time
+      const todayAlerts = generateDailyAlerts(now, selectedCity, ayanamsha, prefs);
+
+      // Count upcoming or currently active windows within the next 45 minutes
+      const nowMs = now.getTime();
+      const nearCount = todayAlerts.filter((a) => {
+        const diffMs = a.targetTime.getTime() - nowMs;
+        return diffMs >= -20 * 60000 && diffMs <= 60 * 60000;
+      }).length;
+      setActiveAlertsCount(nearCount);
+
+      // Check for alerts that are due right now
+      const due = findDueAlerts(todayAlerts, now, triggeredIds);
+
+      if (due.length > 0) {
+        due.forEach((alert) => {
+          setTriggeredIds((prev) => new Set([...prev, alert.id]));
+
+          if (prefs.sound) {
+            playAlertChime(alert.type);
+          }
+
+          dispatchWebNotification(alert);
+
+          if (prefs.inAppToasts) {
+            handleTriggerToast(alert);
+          }
+        });
+      }
+    };
+
+    // Initial check
+    checkAlerts();
+
+    const timer = setInterval(checkAlerts, 10000);
     return () => clearInterval(timer);
-  }, []);
+  }, [selectedCity, ayanamsha, triggeredIds]);
 
   // Compute daily Panchanga
   const panchanga: PanchangaDay = useMemo(() => {
     return calculatePanchanga(currentDate, selectedCity, mode, ayanamsha);
   }, [currentDate, selectedCity, mode, ayanamsha]);
 
+  // Jump to Panchanga from Saved items
+  const handleNavigateToPanchanga = (date: Date, cityName?: string) => {
+    if (cityName) {
+      const found = BUILTIN_CITIES.find(
+        (c) => c.name.toLowerCase() === cityName.toLowerCase() ||
+               c.stateCountry.toLowerCase().includes(cityName.toLowerCase())
+      );
+      if (found) {
+        setSelectedCity(found);
+      }
+    }
+    setCurrentDate(date);
+    setActiveTab('panchanga');
+  };
+
+  // Jump to Gocara from Saved items
+  const handleNavigateToGochara = (date: Date) => {
+    setCurrentDate(date);
+    setActiveTab('gochara');
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-amber-500 selection:text-slate-950">
       {/* Top Branding Navigation */}
-      <Navbar activeTab={activeTab} onTabChange={setActiveTab} />
+      <Navbar 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+        onOpenNotifications={() => setIsNotificationCenterOpen(true)}
+        activeAlertsCount={activeAlertsCount}
+      />
 
       {/* Global Location, Date & Calculation Controls */}
       <HeaderControls
@@ -82,7 +204,11 @@ export default function App() {
         )}
 
         {activeTab === 'muhurta' && (
-          <HoraMuhurtaView panchanga={panchanga} currentTime={liveTime} />
+          <HoraMuhurtaView 
+            panchanga={panchanga} 
+            currentTime={liveTime} 
+            onOpenNotificationCenter={() => setIsNotificationCenterOpen(true)}
+          />
         )}
 
         {activeTab === 'kundali' && (
@@ -134,6 +260,13 @@ export default function App() {
         {activeTab === 'mytithis' && (
           <MyTithisView />
         )}
+
+        {activeTab === 'saved' && (
+          <SavedView
+            onNavigateToPanchanga={handleNavigateToPanchanga}
+            onNavigateToGochara={handleNavigateToGochara}
+          />
+        )}
       </main>
 
       {/* Footer */}
@@ -154,6 +287,24 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Floating In-App Notification Toasts */}
+      <NotificationToastContainer
+        toasts={activeToasts}
+        onDismiss={handleDismissToast}
+        onNavigate={(tab) => setActiveTab(tab)}
+      />
+
+      {/* Vedic Muhūrta & Transit Alert Center Modal */}
+      <NotificationCenterModal
+        isOpen={isNotificationCenterOpen}
+        onClose={() => setIsNotificationCenterOpen(false)}
+        city={selectedCity}
+        ayanamsha={ayanamsha}
+        currentDate={currentDate}
+        onTriggerTestAlert={handleTriggerToast}
+        onNavigateTab={(tab) => setActiveTab(tab)}
+      />
     </div>
   );
 }

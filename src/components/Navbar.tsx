@@ -1,4 +1,9 @@
-import React from 'react';
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect } from 'react';
 import { 
   Sun, 
   Calendar, 
@@ -9,9 +14,11 @@ import {
   BookOpen, 
   Flame, 
   Bookmark, 
+  BookmarkCheck,
   Share2, 
   Radio
 } from 'lucide-react';
+import { getAllBookmarks, BOOKMARKS_UPDATED_EVENT } from '../engine/bookmarks';
 
 export type AppTab = 
   | 'panchanga' 
@@ -24,14 +31,37 @@ export type AppTab =
   | 'bodha' 
   | 'vidya' 
   | 'festivals' 
-  | 'mytithis';
+  | 'mytithis'
+  | 'saved';
 
 interface NavbarProps {
   activeTab: AppTab;
   onTabChange: (tab: AppTab) => void;
+  onOpenNotifications?: () => void;
+  activeAlertsCount?: number;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ activeTab, onTabChange }) => {
+export const Navbar: React.FC<NavbarProps> = ({ 
+  activeTab, 
+  onTabChange, 
+  onOpenNotifications,
+  activeAlertsCount = 0 
+}) => {
+  const [savedCount, setSavedCount] = useState<number>(0);
+
+  useEffect(() => {
+    const updateCount = () => {
+      const bms = getAllBookmarks();
+      setSavedCount(bms.length);
+    };
+
+    updateCount();
+    window.addEventListener(BOOKMARKS_UPDATED_EVENT, updateCount);
+    return () => {
+      window.removeEventListener(BOOKMARKS_UPDATED_EVENT, updateCount);
+    };
+  }, []);
+
   const tabs: { id: AppTab; label: string; icon: React.ReactNode; badge?: string }[] = [
     { id: 'panchanga', label: 'Panchanga', icon: <Sun className="w-4 h-4" /> },
     { id: 'kaladarshana', label: 'Kaladarshana', icon: <Calendar className="w-4 h-4" />, badge: 'Calendar' },
@@ -44,6 +74,12 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, onTabChange }) => {
     { id: 'vidya', label: 'KālaVidyā (Concepts)', icon: <BookOpen className="w-4 h-4" /> },
     { id: 'festivals', label: 'Festivals & Vratas', icon: <Flame className="w-4 h-4" /> },
     { id: 'mytithis', label: 'My Tithis', icon: <Bookmark className="w-4 h-4" /> },
+    { 
+      id: 'saved', 
+      label: 'Saved (संग्रह)', 
+      icon: <BookmarkCheck className="w-4 h-4 text-amber-400" />, 
+      badge: savedCount > 0 ? `${savedCount} Saved` : undefined 
+    },
   ];
 
   return (
@@ -68,9 +104,35 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, onTabChange }) => {
           </div>
         </div>
 
-        <div className="hidden lg:flex items-center gap-3 text-right">
-          <div className="text-xs text-amber-300/80 font-indic font-medium">
-            ॥ कालचक्रं प्रवर्त्तते ॥
+        <div className="flex items-center gap-2 sm:gap-3">
+          {onOpenNotifications && (
+            <button
+              onClick={onOpenNotifications}
+              className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:text-amber-100 text-xs font-semibold shadow-sm transition-all cursor-pointer"
+              title="Muhūrta & Transit Alert Center"
+            >
+              <span className="relative">
+                <Clock className="w-4 h-4 text-amber-400" />
+                {activeAlertsCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                )}
+                {activeAlertsCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-2 h-2 rounded-full bg-emerald-400"></span>
+                )}
+              </span>
+              <span className="hidden sm:inline">Alerts</span>
+              {activeAlertsCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-amber-500/30 text-amber-200 text-[10px] font-bold">
+                  {activeAlertsCount}
+                </span>
+              )}
+            </button>
+          )}
+
+          <div className="hidden lg:block text-right">
+            <div className="text-xs text-amber-300/80 font-indic font-medium">
+              ॥ कालचक्रं प्रवर्त्तते ॥
+            </div>
           </div>
         </div>
       </div>

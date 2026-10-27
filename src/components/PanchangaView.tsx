@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sun, 
   Moon, 
@@ -9,10 +9,26 @@ import {
   Flame, 
   CalendarDays,
   Compass,
-  ArrowRight
+  ArrowRight,
+  Download,
+  FileText,
+  Check,
+  Loader2,
+  Bookmark,
+  BookmarkCheck,
+  X,
+  Edit3
 } from 'lucide-react';
 import { Language, PanchangaDay } from '../types/kalayantra';
 import { formatCityTime } from '../engine/astronomy';
+import { downloadPanchangaPDF } from '../engine/pdfExport';
+import { 
+  isPanchangaBookmarked, 
+  togglePanchangaBookmark, 
+  getPanchangaBookmark, 
+  updateBookmarkNotes, 
+  BOOKMARKS_UPDATED_EVENT 
+} from '../engine/bookmarks';
 
 interface PanchangaViewProps {
   panchanga: PanchangaDay;
@@ -20,6 +36,13 @@ interface PanchangaViewProps {
 }
 
 export const PanchangaView: React.FC<PanchangaViewProps> = ({ panchanga, language }) => {
+  const [isExporting, setIsExporting] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [noteInput, setNoteInput] = useState('');
+  const [bookmarkFeedback, setBookmarkFeedback] = useState<string | null>(null);
+
   const { 
     tithi, 
     nakshatra, 
@@ -36,8 +59,127 @@ export const PanchangaView: React.FC<PanchangaViewProps> = ({ panchanga, languag
     mode 
   } = panchanga;
 
+  const dateISO = panchanga.date.toISOString().split('T')[0];
+
+  // Sync bookmark status
+  useEffect(() => {
+    const checkStatus = () => {
+      const exists = isPanchangaBookmarked(dateISO, city.name);
+      setIsBookmarked(exists);
+      if (exists) {
+        const bm = getPanchangaBookmark(dateISO, city.name);
+        setNoteInput(bm?.notes || '');
+      } else {
+        setNoteInput('');
+      }
+    };
+
+    checkStatus();
+
+    window.addEventListener(BOOKMARKS_UPDATED_EVENT, checkStatus);
+    return () => {
+      window.removeEventListener(BOOKMARKS_UPDATED_EVENT, checkStatus);
+    };
+  }, [dateISO, city.name]);
+
+  const handleToggleBookmark = () => {
+    const existing = getPanchangaBookmark(dateISO, city.name);
+    if (existing) {
+      // If already bookmarked, open modal to view/edit notes or remove
+      setShowNoteModal(true);
+      return;
+    }
+
+    // Build rich bookmark details
+    const formattedDate = panchanga.date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+
+    const festNames = festivals && festivals.length > 0 ? festivals.map((f) => f.name) : [];
+
+    const res = togglePanchangaBookmark({
+      type: 'panchanga',
+      title: `${panchanga.lunarMonth} ${tithi.name} (${tithi.paksha} Pakṣa)`,
+      subtitle: `${vaara.name} • ${nakshatra.name} Nakṣatra • ${yoga.name} Yoga`,
+      dateISO,
+      displayDate: formattedDate,
+      cityName: city.name,
+      cityLat: city.lat,
+      cityLon: city.lon,
+      cityTz: city.tz,
+      notes: '',
+      tags: ['Panchanga', tithi.paksha, ...festNames.slice(0, 2)],
+      panchangaDetails: {
+        tithiName: tithi.name,
+        tithiNumber: tithi.tithiInPaksha,
+        paksha: tithi.paksha,
+        nakshatraName: nakshatra.name,
+        yogaName: yoga.name,
+        karanaName: karana.name,
+        vaaraName: vaara.name,
+        lunarMonth: panchanga.lunarMonth,
+        sauraMasa: solar.sauraMasa,
+        shakaYear: solar.shakaYear,
+        samvatsara: solar.samvatsara,
+        festivals: festNames,
+        sunrise: formatCityTime(sunMoon.sunrise, city.tz, true),
+        sunset: formatCityTime(sunMoon.sunset, city.tz, true),
+      },
+    });
+
+    setIsBookmarked(res.bookmarked);
+    setBookmarkFeedback('Date bookmarked to Saved view!');
+    setTimeout(() => setBookmarkFeedback(null), 3000);
+  };
+
+  const handleSaveNotes = () => {
+    const bm = getPanchangaBookmark(dateISO, city.name);
+    if (bm) {
+      updateBookmarkNotes(bm.id, noteInput.trim());
+      setShowNoteModal(false);
+      setBookmarkFeedback('Notes updated in Saved view!');
+      setTimeout(() => setBookmarkFeedback(null), 3000);
+    }
+  };
+
+  const handleRemoveBookmark = () => {
+    const bm = getPanchangaBookmark(dateISO, city.name);
+    if (bm) {
+      togglePanchangaBookmark({
+        type: 'panchanga',
+        title: bm.title,
+        dateISO,
+        displayDate: bm.displayDate,
+        cityName: city.name,
+      });
+      setShowNoteModal(false);
+      setIsBookmarked(false);
+      setBookmarkFeedback('Removed date from Saved view');
+      setTimeout(() => setBookmarkFeedback(null), 3000);
+    }
+  };
+
   const formatTime = (d?: Date | null) => {
     return formatCityTime(d, city.tz, true);
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      setIsExporting(true);
+      // Small timeout to allow UI loading state to render smoothly
+      setTimeout(() => {
+        downloadPanchangaPDF(panchanga, language);
+        setIsExporting(false);
+        setDownloadSuccess(true);
+        setTimeout(() => setDownloadSuccess(false), 3000);
+      }, 50);
+    } catch (err) {
+      console.error('Failed to generate PDF:', err);
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -77,23 +219,157 @@ export const PanchangaView: React.FC<PanchangaViewProps> = ({ panchanga, languag
             </div>
           </div>
 
-          {/* Traditional Ghatika & Prahara Clock Box */}
-          <div className="bg-slate-950/70 border border-amber-500/20 rounded-xl p-3 sm:px-4 flex items-center gap-4 min-w-[240px]">
-            <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-              <Clock className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Traditional Vedic Time</div>
-              <div className="font-mono text-base font-bold text-amber-200">
-                {traditionalTime.ghadiString}
+            {/* Right Section: Traditional Clock, Download PDF & Bookmark Button */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+              {/* Traditional Ghatika & Prahara Clock Box */}
+              <div className="bg-slate-950/70 border border-amber-500/20 rounded-xl p-3 sm:px-4 flex items-center gap-4 min-w-[210px]">
+                <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Traditional Vedic Time</div>
+                  <div className="font-mono text-base font-bold text-amber-200">
+                    {traditionalTime.ghadiString}
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    Prahara {traditionalTime.prahara} of 4 ({traditionalTime.isDay ? 'Dina' : 'Rātri'}) • {traditionalTime.dinamanaGhadis}g Day
+                  </div>
+                </div>
               </div>
-              <div className="text-[11px] text-slate-400">
-                Prahara {traditionalTime.prahara} of 4 ({traditionalTime.isDay ? 'Dina' : 'Rātri'}) • {traditionalTime.dinamanaGhadis}g Day
+
+              <div className="flex items-center gap-2">
+                {/* Download PDF Action Button */}
+                <button
+                  onClick={handleDownloadPDF}
+                  disabled={isExporting}
+                  title="Download daily Vedic Panchanga astrological almanac as a PDF document"
+                  className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-3 sm:py-3.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 shadow-md border cursor-pointer select-none whitespace-nowrap ${
+                    downloadSuccess
+                      ? 'bg-emerald-600/90 text-white border-emerald-400/50 shadow-emerald-900/30'
+                      : isExporting
+                      ? 'bg-amber-600/50 text-amber-100 border-amber-500/40 opacity-80 cursor-wait'
+                      : 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 border-amber-300 shadow-amber-500/20 hover:shadow-amber-500/30 active:scale-[0.98]'
+                  }`}
+                >
+                  {isExporting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                      <span>Preparing PDF...</span>
+                    </>
+                  ) : downloadSuccess ? (
+                    <>
+                      <Check className="w-4 h-4 text-white" />
+                      <span>PDF Downloaded</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4 text-slate-950" />
+                      <span>Download PDF</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Bookmark Date Action Button */}
+                <button
+                  onClick={handleToggleBookmark}
+                  title={isBookmarked ? "This date is in your Saved items (click to view/edit notes or remove)" : "Bookmark this Panchanga date to your Saved items"}
+                  className={`flex items-center justify-center gap-2 px-3.5 py-3 sm:py-3.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 shadow-md border cursor-pointer select-none whitespace-nowrap ${
+                    isBookmarked
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 hover:bg-amber-500/30 shadow-amber-500/10'
+                      : 'bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white border-slate-700 hover:border-slate-600 shadow-slate-950/40 active:scale-[0.98]'
+                  }`}
+                >
+                  {isBookmarked ? (
+                    <>
+                      <BookmarkCheck className="w-4 h-4 text-amber-400 fill-amber-400" />
+                      <span>Saved</span>
+                    </>
+                  ) : (
+                    <>
+                      <Bookmark className="w-4 h-4 text-slate-400" />
+                      <span>Bookmark Date</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
         </div>
-      </div>
+
+        {/* Feedback Toast if any */}
+        {bookmarkFeedback && (
+          <div className="fixed bottom-6 right-6 z-50 bg-amber-500 text-slate-950 px-4 py-2.5 rounded-xl font-semibold shadow-2xl flex items-center gap-2 text-sm border border-amber-300 animate-in fade-in slide-in-from-bottom-2">
+            <BookmarkCheck className="w-4 h-4 text-slate-950 fill-slate-950" />
+            <span>{bookmarkFeedback}</span>
+          </div>
+        )}
+
+        {/* Note / Edit Modal for Panchanga Bookmark */}
+        {showNoteModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in">
+            <div className="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2 text-amber-300 font-heading font-bold text-base">
+                  <Bookmark className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  <span>Saved Date Notes</span>
+                </div>
+                <button
+                  onClick={() => setShowNoteModal(false)}
+                  className="text-slate-400 hover:text-slate-200 p-1 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div>
+                <div className="text-xs font-semibold text-slate-200">
+                  {panchanga.lunarMonth} {tithi.name} ({tithi.paksha} Pakṣa)
+                </div>
+                <div className="text-[11px] text-amber-300/80 font-mono mt-0.5">
+                  {panchanga.date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' })} • {city.name}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1">
+                  Personal Notes / Sankalpa / Observations
+                </label>
+                <textarea
+                  value={noteInput}
+                  onChange={(e) => setNoteInput(e.target.value)}
+                  placeholder="e.g. Auspicious day chosen for housewarming ceremony, vratas, or special planetary pooja..."
+                  rows={4}
+                  className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none placeholder-slate-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+                <button
+                  onClick={handleRemoveBookmark}
+                  className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>Remove from Saved</span>
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowNoteModal(false)}
+                    className="px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveNotes}
+                    className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-semibold text-xs rounded-xl shadow cursor-pointer hover:from-amber-400 hover:to-amber-500 transition"
+                  >
+                    Save Notes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
       {/* 2. Active Festivals & Observances */}
       {festivals.length > 0 && (

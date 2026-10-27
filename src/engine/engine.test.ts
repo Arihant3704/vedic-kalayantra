@@ -20,6 +20,22 @@ import { calculateVimshottariTree } from './dasha';
 import { calculateAshtakoota } from './ashtakoota';
 import { analyzeChart } from './bodha';
 import { searchVidya } from './vidya';
+import { generatePanchangaPDF, sanitizeForPdf } from './pdfExport';
+import { 
+  saveBookmark, 
+  getAllBookmarks, 
+  deleteBookmark, 
+  updateBookmarkNotes, 
+  filterBookmarks, 
+  exportBookmarksJSON, 
+  importBookmarksJSON, 
+  clearAllBookmarks, 
+  togglePanchangaBookmark, 
+  toggleTransitBookmark,
+  isPanchangaBookmarked,
+  isTransitBookmarked,
+  seedDefaultBookmarks 
+} from './bookmarks';
 
 test('astronomy: Julian Day and Ayanamsha calculations', () => {
   const d = new Date(Date.UTC(2026, 9, 27, 12, 0, 0));
@@ -119,4 +135,120 @@ test('vidya: Search encyclopedia concepts', () => {
   assert.ok(all.length >= 40, 'Should load at least 40 concepts');
   const tithiHits = searchVidya('tithi');
   assert.ok(tithiHits.length > 0, 'Searching tithi returns results');
+});
+
+test('pdfExport: Generates valid Panchanga PDF instance and sanitizes diacritics', () => {
+  const sanitized = sanitizeForPdf('Śukla Pakṣa Daśamī — Rohiṇī');
+  assert.equal(sanitized, 'Shukla Paksha Dashami - Rohini');
+
+  const pDate = new Date(2026, 9, 27, 6, 30, 0);
+  const p = calculatePanchanga(pDate, DEFAULT_CITY, 'udaya', 'lahiri');
+  const doc = generatePanchangaPDF({ panchanga: p });
+  
+  assert.ok(doc, 'jsPDF document instance created');
+  const pdfOutput = doc.output('datauristring');
+  assert.ok(pdfOutput.startsWith('data:application/pdf;filename=generated.pdf;base64,'), 'Valid PDF data URI output');
+});
+
+test('bookmarks: CRUD operations, notes update, and toggles', () => {
+  clearAllBookmarks();
+  assert.equal(getAllBookmarks().length, 0, 'Initially empty store');
+
+  // Save a Panchanga bookmark
+  const pBm = saveBookmark({
+    type: 'panchanga',
+    title: 'Kārtika Pūrṇimā Special',
+    subtitle: 'Full Moon auspicious worship',
+    dateISO: '2026-11-24',
+    displayDate: 'Tuesday, 24 Nov 2026',
+    cityName: 'Varanasi',
+    notes: 'Personal vrata notes',
+    panchangaDetails: {
+      tithiName: 'Pūrṇimā',
+      paksha: 'Shukla',
+      nakshatraName: 'Kṛttikā',
+      yogaName: 'Śiva',
+      karanaName: 'Bava',
+      vaaraName: 'Tuesday',
+      lunarMonth: 'Kārtika',
+    },
+  });
+
+  assert.ok(pBm.id, 'Bookmark should be assigned an ID');
+  assert.equal(getAllBookmarks().length, 1);
+  assert.equal(isPanchangaBookmarked('2026-11-24', 'Varanasi'), true);
+  assert.equal(isPanchangaBookmarked('2026-11-25', 'Varanasi'), false);
+
+  // Update notes
+  const updatedNote = updateBookmarkNotes(pBm.id, 'Updated puja list: offer ghee lamps.');
+  assert.equal(updatedNote, true);
+  assert.equal(getAllBookmarks()[0].notes, 'Updated puja list: offer ghee lamps.');
+
+  // Save a transit bookmark
+  const tBm = saveBookmark({
+    type: 'transit',
+    title: 'Guru Ingress into Gemini',
+    dateISO: '2026-06-02',
+    displayDate: 'Tuesday, 02 Jun 2026',
+    transitDetails: {
+      grahaName: 'Guru (Jupiter)',
+      transitRashi: 'Mithuna (Gemini)',
+      houseFromMoon: 9,
+      isBeneficTransit: true,
+      category: 'Guru Ingress',
+    },
+  });
+
+  assert.equal(getAllBookmarks().length, 2);
+  assert.equal(isTransitBookmarked('Guru (Jupiter)', '2026-06-02', 'Mithuna (Gemini)'), true);
+  assert.equal(isTransitBookmarked('Śani', '2026-06-02'), false);
+
+  // Toggle Panchanga (remove)
+  const toggleRes = togglePanchangaBookmark({
+    type: 'panchanga',
+    title: pBm.title,
+    dateISO: '2026-11-24',
+    displayDate: pBm.displayDate,
+    cityName: 'Varanasi',
+  });
+  assert.equal(toggleRes.bookmarked, false);
+  assert.equal(getAllBookmarks().length, 1);
+
+  // Delete transit bookmark
+  assert.equal(deleteBookmark(tBm.id), true);
+  assert.equal(getAllBookmarks().length, 0);
+});
+
+test('bookmarks: Filtering, seed samples, and JSON Export/Import', () => {
+  clearAllBookmarks();
+  const seeded = seedDefaultBookmarks();
+  assert.equal(seeded.length, 3, 'Sample bookmarks seeded');
+
+  // Filter by type
+  const panchangaOnly = filterBookmarks(seeded, 'panchanga');
+  assert.equal(panchangaOnly.length, 2);
+
+  const transitOnly = filterBookmarks(seeded, 'transit');
+  assert.equal(transitOnly.length, 1);
+
+  // Search by text query
+  const searchVaranasi = filterBookmarks(seeded, 'all', 'Varanasi');
+  assert.equal(searchVaranasi.length, 1);
+
+  const searchJupiter = filterBookmarks(seeded, 'all', 'Jupiter');
+  assert.equal(searchJupiter.length, 1);
+
+  // JSON Export & Import
+  const jsonExport = exportBookmarksJSON(seeded);
+  assert.ok(jsonExport.includes('Kālayantra'));
+  assert.ok(jsonExport.includes('Mithuna'));
+
+  // Clear and re-import
+  clearAllBookmarks();
+  assert.equal(getAllBookmarks().length, 0);
+
+  const importResult = importBookmarksJSON(jsonExport);
+  assert.equal(importResult.success, true);
+  assert.equal(importResult.importedCount, 3);
+  assert.equal(getAllBookmarks().length, 3);
 });
