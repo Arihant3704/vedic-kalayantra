@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-heading: 'Cinzel', serif;
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-indic: 'Yatra One', 'Cinzel', serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #0c0e14;
+    color: #e2e8f0;
+    overflow-x: hidden;
+  }
+}
+
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+.font-indic {
+  font-family: var(--font-indic);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45);
+}

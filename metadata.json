@@ -1,0 +1,6 @@
+{
+  "name": "Kālayantra — Vedic Panchanga & Jyotiṣa Engine",
+  "description": "Offline-first Hindu Panchanga, astronomical calculations, Dharmaśāstra festival engine, Kundali charts, Vimshottari dasha, KalaBodha reasoning graph, and KalaVidya Vedic knowledge base.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

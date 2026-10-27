@@ -1,0 +1,1479 @@
+[
+  {
+    "id": "panchanga",
+    "category": "panchanga",
+    "title": {
+      "en": "Panchanga \u2014 the five limbs of a day",
+      "iast": "Pa\u00f1ch\u0101\u1e45ga",
+      "devanagari": "\u092a\u091e\u094d\u091a\u093e\u0919\u094d\u0917"
+    },
+    "summary": {
+      "en": "The five classical components that together describe a day.",
+      "iast": "The five classical components that together describe a day.",
+      "devanagari": "\u092a\u0902\u091a\u093e\u0902\u0917 \u2014 \u0926\u093f\u0928 \u0915\u0947 \u092a\u093e\u0901\u091a \u0905\u0902\u0917"
+    },
+    "detail": "The Pa\u00f1ch\u0101\u1e45ga ('five limbs') is the traditional Hindu almanac compressed to five daily quantities: Tithi (lunar day), Nakshatra (constellation of the Moon), Yoga (index of combined Sun\u2013Moon longitude), Karana (half-tithi) and Vaara (weekday). Each is a measurable section of an astronomical cycle, evaluated at a fixed anchor point \u2014 by convention at sunrise (Udaya). K\u0101laYantra reports every element in 'at sunrise' and 'after transition' forms, marks which one is active at dawn, and shows the exact transition clock time in 24+ notation for events after midnight.",
+    "formula": "tithi   = floor(((Moon \u2212 Sun) mod 360\u00b0) / 12\u00b0)\nnakshatra = floor(Moon / (360\u00b0/27)) mod 27, each with 4 p\u0101das\nyoga    = floor(((Sun + Moon) mod 360\u00b0) / (360\u00b0/27)) mod 27\nkarana  = floor(((Moon \u2212 Sun) mod 360\u00b0) / 6\u00b0)  (60 kara\u1e47as)\nvaara   = weekday of the Julian Day number, Sunday-first",
+    "example": "K\u0101laYantra's /day endpoint returns these five limbs with _1/_2 (sunrise and next) forms plus _end transition times, e.g. \"tithi_1\": \"Pratipada\", \"tithi_2\": \"Dwitiya\", \"tithi_2_end\": \"31:09\" (next day 07:09).",
+    "source": "Classical Pa\u00f1ch\u0101\u1e45ga tradition (S\u016brya Siddh\u0101nta); modern Udaya-\u0101di convention.",
+    "keywords": [
+      "five limbs",
+      "almanac",
+      "panchang",
+      "daily elements",
+      "tithi nakshatra yoga karana vaara"
+    ],
+    "see_also": [
+      "tithi",
+      "nakshatra",
+      "yoga_panchanga",
+      "karana",
+      "vaara",
+      "traditional_mode"
+    ]
+  },
+  {
+    "id": "tithi",
+    "category": "panchanga",
+    "title": {
+      "en": "Tithi \u2014 the lunar day",
+      "iast": "Tithi",
+      "devanagari": "\u0924\u093f\u0925\u093f"
+    },
+    "summary": {
+      "en": "A thirtieth of the synodic (lunar) month: 12\u00b0 of Moon\u2013Sun elongation.",
+      "iast": "A thirtieth of the synodic (lunar) month: 12\u00b0 of Moon\u2013Sun elongation.",
+      "devanagari": "\u092e\u093e\u0938 \u0915\u093e \u0924\u0940\u0938\u0935\u093e\u0901 \u092d\u093e\u0917 \u2014 12\u00b0 \u091a\u0928\u094d\u0926\u094d\u0930-\u0938\u0942\u0930\u094d\u092f \u0935\u093f\u092f\u094b\u0917"
+    },
+    "detail": "One tithi is the time the Moon takes to gain 12\u00b0 on the Sun in elongation; thirty such steps complete the lunar month (360\u00b0/12\u00b0). The first fifteen are the Shukla (waxing) fortnight ending in P\u016br\u1e47im\u0101, the second fifteen the K\u1e5b\u1e63\u1e47a (waning) fortnight ending in Am\u0101vasy\u0101. Because the Moon speeds up near perigee, some days may skip a tithi (K\u1e63aya) or hold one across two sunrises (V\u1e5bddhi). K\u0101laYantra evaluates the tithi both at sunrise and live, computes its ending instant, and flags k\u1e63aya days so observances are merged correctly.",
+    "formula": "tithi_index = int(((moon_l \u2212 sun_l) mod 360.0) / 12.0) mod 30\n0\u201314 \u2192 Shukla Pratipad\u0101 \u2026 P\u016br\u1e47im\u0101; 15\u201329 \u2192 K\u1e5b\u1e63\u1e47a Pratipad\u0101 \u2026 Am\u0101vasy\u0101.",
+    "example": "Elongation 12\u00b0 \u2192 index 1 (Dwit\u012by\u0101). For the 1990-06-15 10:30 IST sample chart the running tithi bracket is computed the same way from the sidereal Sun and Moon at the moment of interest.",
+    "source": "S\u016brya Siddh\u0101nta; B\u1e5bhat Sa\u1e41hit\u0101.",
+    "keywords": [
+      "lunar day",
+      "pratipada",
+      "purnima",
+      "amavasya",
+      "shukla",
+      "krishna",
+      "paksha"
+    ],
+    "see_also": [
+      "paksha",
+      "karana",
+      "kshaya_tithi",
+      "panchanga"
+    ]
+  },
+  {
+    "id": "nakshatra",
+    "category": "panchanga",
+    "title": {
+      "en": "Nakshatra \u2014 the lunar mansion",
+      "iast": "Nak\u1e63atra",
+      "devanagari": "\u0928\u0915\u094d\u0937\u0924\u094d\u0930"
+    },
+    "summary": {
+      "en": "One of 27 (or 28) fixed star mansions; 13\u00b020\u2032 of ecliptic longitude each.",
+      "iast": "One of 27 (or 28) fixed star mansions; 13\u00b020\u2032 of ecliptic longitude each.",
+      "devanagari": "27 \u0928\u0915\u094d\u0937\u0924\u094d\u0930 \u2014 \u092a\u094d\u0930\u0924\u094d\u092f\u0947\u0915 13\u00b020\u2032"
+    },
+    "detail": "The ecliptic is divided into 27 equal mansions of 360\u00b0/27 = 13\u00b020\u2032 = 800\u2032 each, reckoned from A\u015bvin\u012b. Every mansion is ruled by one graha (the Nak\u1e63atr\u0101dhipati) and is further split into four p\u0101das of 3\u00b020\u2032, giving 108 p\u0101das matched to the 9 grahas \u00d7 12 r\u0101\u015bis. The Moon's nakshatra anchors the Vimshottari dasha cycle; the Sun's nakshatra is also computed by the engine so solar transitions can be shown.",
+    "formula": "nakshatra_index = int(moon_sidereal_lon / 13.3333\u2026) mod 27\npada = int((moon_sidereal_lon mod 13.3333\u2026) / 3.3333\u2026) + 1",
+    "example": "Moon at 88\u00b0 \u2192 88/13.3333 = 6.6 \u2192 index 6 = Punarvasu; 88 mod 13.3333 = 8.0 \u2192 8.0/3.3333 = 2.4 \u2192 p\u0101da 3.",
+    "source": "S\u016brya Siddh\u0101nta; B\u1e5bhat J\u0101taka.",
+    "keywords": [
+      "mansion",
+      "star",
+      "lunar asterism",
+      "pada",
+      "ashwini",
+      "revati",
+      "moon star"
+    ],
+    "see_also": [
+      "vimshottari",
+      "panchanga",
+      "lagna"
+    ]
+  },
+  {
+    "id": "yoga_panchanga",
+    "category": "panchanga",
+    "title": {
+      "en": "Yoga (Panchanga) \u2014 the third limb",
+      "iast": "Yoga",
+      "devanagari": "\u092f\u094b\u0917"
+    },
+    "summary": {
+      "en": "One of 27 daily yogas derived from the sum of the Sun's and Moon's longitudes.",
+      "iast": "One of 27 daily yogas derived from the sum of the Sun's and Moon's longitudes.",
+      "devanagari": "\u0938\u0942\u0930\u094d\u092f-\u091a\u0928\u094d\u0926\u094d\u0930 \u092f\u094b\u0917 \u0938\u0947 27 \u092f\u094b\u0917"
+    },
+    "detail": "The daily (panchanga) yoga is unrelated to the Raja/Dhana yogas of prognostication: it is a pure time-keeping index. Sun and Moon longitudes are summed, reduced mod 360\u00b0 and divided into 27 equal parts of 13\u00b020\u2032. Each index carries a lineage of meanings (e.g. Vishkambha, Dhruva, Vaidhriti) used in muhurta selection, with auspicious and inauspicious attributes.",
+    "formula": "yoga_index = int(((sun_l + moon_l) mod 360.0) / 13.3333\u2026) mod 27",
+    "example": "Sun 60\u00b0 + Moon 90\u00b0 = 150\u00b0 \u2192 150/13.3333 = 11.25 \u2192 index 11 = Dhruva.",
+    "source": "S\u016brya Siddh\u0101nta; Muh\u016brta (nitya-yoga) tradition.",
+    "keywords": [
+      "daily yoga",
+      "sun moon sum",
+      "vishkambha",
+      "dhruva",
+      "third limb"
+    ],
+    "see_also": [
+      "panchanga",
+      "muhurta"
+    ]
+  },
+  {
+    "id": "karana",
+    "category": "panchanga",
+    "title": {
+      "en": "Karana \u2014 the half-tithi",
+      "iast": "Kara\u1e47a",
+      "devanagari": "\u0915\u0930\u0923"
+    },
+    "summary": {
+      "en": "Half a tithi (6\u00b0 of elongation); 11 karanas in 60 recurring slots.",
+      "iast": "Half a tithi (6\u00b0 of elongation); 11 kara\u1e47as in 60 recurring slots.",
+      "devanagari": "\u0924\u093f\u0925\u093f \u0915\u093e \u0906\u0927\u093e \u2014 60 \u0915\u0930\u0923"
+    },
+    "detail": "A karana is the time in which the Moon gains 6\u00b0 on the Sun \u2014 half a tithi \u2014 so each lunar month holds 60 karanas. Seven movable karanas (Bava, B\u0101lava, Kaulava, Taitila, Gara, Va\u1e47ija, Vishti) repeat 8 times (56) plus four fixed ones (Shakuni, Chatushp\u0101da, N\u0101ga, Kintughna) give the full 60. K\u0101laYantra reports the karana at sunrise, its transition, and the active index.",
+    "formula": "karana_index = int(((moon_l \u2212 sun_l) mod 360.0) / 6.0)\nindices 0\u201355 cycle the seven chara kara\u1e47as; 56\u201359 are the four stira kara\u1e47as.",
+    "example": "Elongation of 6\u00b0 \u2192 index 1 = B\u0101lava; 60\u00b0 \u2192 index 10 = Va\u1e47ija.",
+    "source": "S\u016brya Siddh\u0101nta; Jyoti\u1e63a Kara\u1e47a literature.",
+    "keywords": [
+      "half tithi",
+      "bava",
+      "vishti",
+      "chara",
+      "stira",
+      "60 karanas"
+    ],
+    "see_also": [
+      "tithi",
+      "panchanga"
+    ]
+  },
+  {
+    "id": "vaara",
+    "category": "panchanga",
+    "title": {
+      "en": "Vaara \u2014 the weekday",
+      "iast": "V\u0101ra",
+      "devanagari": "\u0935\u093e\u0930"
+    },
+    "summary": {
+      "en": "The seven-day cycle named after its ruling graha.",
+      "iast": "The seven-day cycle named after its ruling graha.",
+      "devanagari": "\u0917\u094d\u0930\u0939\u094b\u0902 \u0915\u0947 \u0928\u093e\u092e \u092a\u0930 \u0938\u093e\u0924 \u0935\u093e\u0930"
+    },
+    "detail": "Weekdays are the one wholly secular limb of the pa\u00f1ch\u0101\u1e45ga, named for the graha ruling the first hour of the day: Raviv\u0101ra (Sun), Somav\u0101ra (Moon), Ma\u1e45galav\u0101ra (Mars), Budhav\u0101ra (Mercury), Guruv\u0101ra (Jupiter), \u015aukrav\u0101ra (Venus), \u015aaniv\u0101ra (Saturn). The day is also classed Sthira or Chara (fixed / moving), which matters for choosing unlucky days for certain acts.",
+    "formula": "vaara = weekday of the Julian Day number, Sun-first ordering.",
+    "example": "1990-06-15 was a Friday (\u015aukrav\u0101ra); the engine derives it from the Julian Day number.",
+    "source": "Common jyoti\u1e63a convention; B\u1e5bhat Sa\u1e41hit\u0101.",
+    "keywords": [
+      "weekday",
+      "day of week",
+      "ravi",
+      "som",
+      "mangal",
+      "shani",
+      "sthira",
+      "chara"
+    ],
+    "see_also": [
+      "panchanga"
+    ]
+  },
+  {
+    "id": "masa",
+    "category": "time",
+    "title": {
+      "en": "Masa \u2014 the lunar month",
+      "iast": "M\u0101sa",
+      "devanagari": "\u092e\u093e\u0938"
+    },
+    "summary": {
+      "en": "Lunar month named by the sankranti it contains (Chaitra \u2026 Phalguna).",
+      "iast": "Lunar month named by the sankranti it contains (Chaitra \u2026 Phalguna).",
+      "devanagari": "\u0938\u0902\u0915\u094d\u0930\u093e\u0902\u0924\u093f \u0938\u0947 \u0928\u093e\u092e\u093f\u0924 \u091a\u093e\u0928\u094d\u0926\u094d\u0930 \u092e\u093e\u0938"
+    },
+    "detail": "Twelve lunar months run from Chaitra to Phalguna. A lunar month is named after the solar month that contains it \u2014 specifically the synodic month in which the Sun's sa\u1e45kr\u0101nti (entry into a sign) falls. The convention changes the boundary: am\u0101vasy\u0101nta months end at new moon, p\u016br\u1e47im\u0101nta at full moon. Adhika (intercalary) and K\u1e63aya (lost) months fall out naturally when a lunar month contains zero or two sa\u1e45kr\u0101ntis. K\u0101laYantra exposes both conventions via the month_system setting and reports the Masa index and era (Shaka/Vikrama/Kali) numbers.",
+    "formula": "Find the sa\u1e45kr\u0101nti bracketing the lunation; masa index = that solar month index (Chaitra=0 \u2026 Phalguna=11); adjust for am\u0101vasy\u0101nta/p\u016br\u1e47im\u0101nta and adhika/kshaya detection.",
+    "example": "The engine's get_lunar_month_details() returns, e.g., \"Bhadrapada\" (index 5) with the era years for any date.",
+    "source": "S\u016brya Siddh\u0101nta; Pa\u00f1ch\u0101\u1e45ga traditional astronomy.",
+    "keywords": [
+      "lunar month",
+      "chaitra",
+      "adhika masa",
+      "intercalary",
+      "amavasyanta",
+      "purnimanta"
+    ],
+    "see_also": [
+      "paksha",
+      "tithi",
+      "sankranti",
+      "samvatsara",
+      "saura_calendar"
+    ]
+  },
+  {
+    "id": "paksha",
+    "category": "time",
+    "title": {
+      "en": "Paksha \u2014 the fortnight",
+      "iast": "Pak\u1e63a",
+      "devanagari": "\u092a\u0915\u094d\u0937"
+    },
+    "summary": {
+      "en": "Shukla (waxing) or Krishna (waning) half of the lunar month.",
+      "iast": "\u015aukla / K\u1e5b\u1e63\u1e47a pak\u1e63a",
+      "devanagari": "\u0936\u0941\u0915\u094d\u0932 / \u0915\u0943\u0937\u094d\u0923 \u092a\u0915\u094d\u0937"
+    },
+    "detail": "Each lunar month is two fortnights: \u015aukla Pak\u1e63a from Pratipad\u0101 to P\u016br\u1e47im\u0101 (Moon waxing toward Sun opposition) and K\u1e5b\u1e63\u1e47a Pak\u1e63a to Am\u0101vasy\u0101. Paksha is used by observance rules (Ekada\u015b\u012b is always \u015aukla or K\u1e5b\u1e63\u1e47a Ekada\u015b\u012b), festival logic and ashtakoota/reminder matching.",
+    "formula": "paksha = 'Shukla' if tithi_index in 0..14 else 'Krishna'.",
+    "example": "Tithi index 9 \u2192 Shukla Navam\u012b; index 24 \u2192 Krishna Navam\u012b.",
+    "source": "Common jyoti\u1e63a convention.",
+    "keywords": [
+      "fortnight",
+      "waxing",
+      "waning",
+      "shukla",
+      "krishna",
+      "purnima",
+      "amavasya"
+    ],
+    "see_also": [
+      "tithi",
+      "masa",
+      "ekadashi"
+    ]
+  },
+  {
+    "id": "ritu",
+    "category": "time",
+    "title": {
+      "en": "Ritu \u2014 the season",
+      "iast": "\u1e5atu",
+      "devanagari": "\u090b\u0924\u0941"
+    },
+    "summary": {
+      "en": "The six ritus: Vasanta, Grishma, Varsha, Sharad, Hemanta, Shishira.",
+      "iast": "The six \u1e5btus: Vasanta, Gr\u012b\u1e63ma, Var\u1e63\u0101, \u015aarad, Hemanta, \u015ai\u015bira.",
+      "devanagari": "\u091b\u0939 \u090b\u0924\u0941 \u2014 \u0935\u0938\u0902\u0924, \u0917\u094d\u0930\u0940\u0937\u094d\u092e, \u0935\u0930\u094d\u0937\u093e, \u0936\u0930\u0926, \u0939\u0947\u092e\u0902\u0924, \u0936\u093f\u0936\u093f\u0930"
+    },
+    "detail": "The Hindu year is six two-month seasons keyed to the lunar months: Vasanta (Chaitra\u2013Vaishakha), Gr\u012b\u1e63ma (Jyeshtha\u2013Ashadha), Var\u1e63\u0101 (Shravana\u2013Bhadrapada), \u015aarad (Ashvin\u2013Kartika), Hemanta (Margashirsha\u2013Pausha), \u015ai\u015bira (Magha\u2013Phalguna). K\u0101laYantra attaches the ritu (with hints like 'Var\u1e63\u0101 (Monsoon)') to every day record.",
+    "formula": "ritu_index = floor(masa_index / 2) mapped to the six-season table.",
+    "example": "Bhadrapada (masa index 5) \u2192 floor(5/2)=2 \u2192 Var\u1e63\u0101 (Monsoon).",
+    "source": "\u1e5atu classification per classical calendar; Vi\u1e63\u1e47u Pur\u0101\u1e47a references.",
+    "keywords": [
+      "season",
+      "vasant",
+      "grishma",
+      "varsha",
+      "sharad",
+      "hemant",
+      "shishir"
+    ],
+    "see_also": [
+      "masa",
+      "ayana"
+    ]
+  },
+  {
+    "id": "ayana",
+    "category": "time",
+    "title": {
+      "en": "Ayana \u2014 the tropical half-year",
+      "iast": "Ayana",
+      "devanagari": "\u0905\u092f\u0928"
+    },
+    "summary": {
+      "en": "Uttarayana (Sun northward) and Dakshinayana (Sun southward).",
+      "iast": "Uttar\u0101ya\u1e47a / Dak\u1e63i\u1e47\u0101yana",
+      "devanagari": "\u0909\u0924\u094d\u0924\u0930\u093e\u092f\u0923 / \u0926\u0915\u094d\u0937\u093f\u0923\u093e\u092f\u0923"
+    },
+    "detail": "The two ayanas mark the Sun's apparent travel in declination: Uttar\u0101ya\u1e47a while the Sun moves north of its southernmost point (sidereal roughly Makara \u2192 Mithuna), Dak\u1e63i\u1e47\u0101yana the rest. The switch day is Makara Sa\u1e45kr\u0101nti / Karka tropic, and it flavors festival timing and muhurta.",
+    "formula": "if 0 <= sun_sidereal < 180 \u2192 Uttar\u0101ya\u1e47a (Sun in the first six signs)\nelse \u2192 Dak\u1e63i\u1e47\u0101yana.",
+    "example": "A Sun at 300\u00b0 (Makara) \u2192 Dak\u1e63i\u1e47\u0101yana just ended \u2192 Uttar\u0101ya\u1e47a begins at Makara Sa\u1e45kr\u0101nti.",
+    "source": "Common jyoti\u1e63a convention.",
+    "keywords": [
+      "uttarayana",
+      "dakshinayana",
+      "solstice",
+      "tropic",
+      "makara sankranti"
+    ],
+    "see_also": [
+      "sankranti",
+      "saura_calendar"
+    ]
+  },
+  {
+    "id": "samvatsara",
+    "category": "time",
+    "title": {
+      "en": "Samvatsara \u2014 the named year cycle",
+      "iast": "Sa\u1e41vatsara",
+      "devanagari": "\u0938\u0902\u0935\u0924\u094d\u0938\u0930"
+    },
+    "summary": {
+      "en": "The 60-year cycle; each year has a name (e.g. Parabhava).",
+      "iast": "The 60-year sa\u1e41vatsara cycle.",
+      "devanagari": "60 \u0938\u0902\u0935\u0924\u094d\u0938\u0930"
+    },
+    "detail": "Years are counted in a repeating cycle of 60 named sa\u1e41vatsaras (Prabhava, Vibhava, Shukla, Pramoda, \u2026 Plava, Kilaka, Sorumana, Sadharana, Virodhakrit, Parabhava \u2026). The same date is expressed in several eras \u2014 Shaka (official Indian civil era, ~78 CE offset), Vikrama (~57 BCE offset) and Kali (~3102 BCE offset). The 60-year index is derived from the Shaka year with a Chaitra-boundary rule.",
+    "formula": "samvatsara_index \u2248 (shaka_year \u2212 50) mod 60\nera_year: Shaka = CE \u2212 78; Vikrama = CE + 57; Kali = CE + 3101.",
+    "example": "Shaka 1948 \u2192 (1948\u221250) mod 60 = 38 \u2192 Parabhava.",
+    "source": "B\u1e5bhat Sa\u1e41hit\u0101; traditional 60-year cycle.",
+    "keywords": [
+      "year name",
+      "60 year cycle",
+      "shaka",
+      "vikram",
+      "kali",
+      "prabhava",
+      "parabhava"
+    ],
+    "see_also": [
+      "masa"
+    ]
+  },
+  {
+    "id": "ghadi_vipal",
+    "category": "time",
+    "title": {
+      "en": "Ghadi-Vipal \u2014 the traditional clock",
+      "iast": "Gha\u1e6d\u012b / Vikal\u0101",
+      "devanagari": "\u0918\u0921\u093c\u0940-\u0935\u093f\u092a\u0932"
+    },
+    "summary": {
+      "en": "The 60-unit day: 1 ghadi = 24 minutes, 1 vipal = 24 seconds.",
+      "iast": "The 60-unit day: 1 gha\u1e6d\u012b = 24 minutes, 1 vikal\u0101 = 24 seconds.",
+      "devanagari": "\u0967 \u0918\u0921\u093c\u0940 = \u0968\u096a \u092e\u093f\u0928\u091f, \u0967 \u0935\u093f\u092a\u0932 = \u0968\u096a \u0938\u0947\u0915\u0902\u0921"
+    },
+    "detail": "Indian time reckoning divides the civil day into 60 gha\u1e6d\u012bs of 24 minutes each, and each gha\u1e6d\u012b into 60 vikal\u0101s (vipals) of 24 seconds. Brahma-muhurta and certain muhurta boundaries are expressed in gha\u1e6d\u012bs; K\u0101laYantra's live Ghadi-Vipal clock converts the current local time into Gha\u1e6d\u012b:Pal in real time.",
+    "formula": "ghadis_elapsed = minutes_since_local_midnight / 24.0\nvipals = (ghadis_elapsed mod 1) \u00d7 60",
+    "example": "At 06:12 local \u2192 372 minutes / 24 = 15.5 \u2192 15 gha\u1e6d\u012b 30 vipals.",
+    "source": "Jyoti\u1e63a time-keeping convention (n\u0101\u1e0d\u012b/vin\u0101\u1e0d\u012b).",
+    "keywords": [
+      "ghati",
+      "ghadi",
+      "vipal",
+      "nalika",
+      "traditional clock",
+      "time units"
+    ],
+    "see_also": [
+      "brahma_muhurta"
+    ]
+  },
+  {
+    "id": "sunrise_sunset",
+    "category": "time",
+    "title": {
+      "en": "Sunrise / Sunset computation",
+      "iast": "Udaya / Asta",
+      "devanagari": "\u0938\u0942\u0930\u094d\u092f\u094b\u0926\u092f-\u0938\u0942\u0930\u094d\u092f\u093e\u0938\u094d\u0924"
+    },
+    "summary": {
+      "en": "Rise and set instants from ephemeris geometry, refraction, and altitude.",
+      "iast": "Rise and set instants from ephemeris geometry, refraction, and altitude.",
+      "devanagari": "\u091c\u094d\u092f\u093e\u092e\u093f\u0924\u093f, \u0905\u092a\u0935\u0930\u094d\u0924\u0928 \u0935 \u090a\u0901\u091a\u093e\u0908 \u0938\u0947 \u0938\u0942\u0930\u094d\u092f\u094b\u0926\u092f/\u0905\u0938\u094d\u0924"
+    },
+    "detail": "Rise/set events are computed with the Swiss Ephemeris rise/transit routines using the astro-observation centre (location, altitude above mean sea level) and the standard apparent horizon with a \u22120.833\u00b0 refraction correction. These anchor the pa\u00f1ch\u0101\u1e45ga convention (elements read at sunrise) and the daytime reckoning for horas, muhurtas, R\u0101hu K\u0101la and Choghadiya. Moonrise/moonset are computed the same way.",
+    "formula": "solve rise/transit(jd, centre = location, altiude-corrected) for the moment the upper limb crosses the \u22120.833\u00b0 horizon.",
+    "example": "For Ujjain defaults on 12-09-2026 the engine reports sunrise 06:12 and sunset 18:34 local.",
+    "source": "Swiss Ephemeris rise/transit algorithms.",
+    "keywords": [
+      "sunrise",
+      "sunset",
+      "rise set",
+      "moonrise",
+      "moonset",
+      "udaya",
+      "asta kala"
+    ],
+    "see_also": [
+      "swiss_ephemeris",
+      "traditional_mode",
+      "hora"
+    ]
+  },
+  {
+    "id": "brahma_muhurta",
+    "category": "time",
+    "title": {
+      "en": "Brahma Muhurta",
+      "iast": "Br\u0101hma Muh\u016brta",
+      "devanagari": "\u092c\u094d\u0930\u093e\u0939\u094d\u092e \u092e\u0941\u0939\u0942\u0930\u094d\u0924"
+    },
+    "summary": {
+      "en": "The ~96-minute auspicious span ending just before sunrise.",
+      "iast": "The ~96-minute auspicious span ending just before sunrise.",
+      "devanagari": "\u0938\u0942\u0930\u094d\u092f\u094b\u0926\u092f \u0938\u0947 \u092a\u0942\u0930\u094d\u0935 ~96 \u092e\u093f\u0928\u091f"
+    },
+    "detail": "Brahma-muh\u016brta is the period roughly 96 minutes before sunrise, traditionally the finest time for meditation, study and new beginnings. K\u0101laYantra computes it as sunrise minus 96 minutes and exposes it on every day record and as a reminder time-target.",
+    "formula": "brahma_muhurta_start = sunrise \u2212 96 minutes\nbrahma_muhurta_end   = sunrise",
+    "example": "Sunrise 06:12 \u2192 Brahma Muhurta 04:36\u201305:24.",
+    "source": "Yoga/\u0100yurveda texts; common convention (two gha\u1e6d\u012bs before dawn).",
+    "keywords": [
+      "brahma muhurta",
+      "brahmamuhurta",
+      "dawn",
+      "meditation time",
+      "96 min"
+    ],
+    "see_also": [
+      "sunrise_sunset",
+      "ghadi_vipal"
+    ]
+  },
+  {
+    "id": "ayanamsa",
+    "category": "sidereal",
+    "title": {
+      "en": "Ayanamsa \u2014 sidereal precession offset",
+      "iast": "Ayan\u0101\u1e41\u015ba",
+      "devanagari": "\u0905\u092f\u0928\u093e\u0902\u0936"
+    },
+    "summary": {
+      "en": "The offset between tropical and sidereal longitudes caused by precession.",
+      "iast": "The offset between tropical and sidereal longitudes caused by precession.",
+      "devanagari": "\u0905\u092f\u0928\u093e\u0902\u0936 \u2014 \u0935\u093f\u0937\u0941\u0935 \u091a\u0932\u0928 \u0938\u0947 \u0905\u0902\u0924\u0930"
+    },
+    "detail": "Vedic astronomy counts the zodiac from a fixed starry frame, whereas the 'tropical' zodiac starts at the equinox. Equinox precession (~50.3\u2033 per year) means the two frames drift; the difference at any moment is the ayan\u0101\u1e41\u015ba. Different schools fix the zero point differently. K\u0101laYantra supports lahiri (the Indian standard, Revati/Chitr\u0101 based), raman, krishnamurti, true_citra, fagan_bradley and deluce, plus sayana (tropical) for comparison.",
+    "formula": "swe.set_sid_mode(SIDM_\u2026); sidereal = tropical \u2212 ayan\u0101\u1e41\u015ba(jd)\nengine API: set_ayanamsa(mode), get_ayanamsa_value(jd_ut).",
+    "example": "The same instant yields different r\u0101\u015bis in lahiri vs sayana; the /kundali endpoint returns the sayana chart when ayanamsa=sayana.",
+    "source": "S\u016brya Siddh\u0101nta; modern Lahiri ephemeris convention (ICAS, N.C. Lahiri).",
+    "keywords": [
+      "precession",
+      "sidereal",
+      "tropical",
+      "lahiri",
+      "raman",
+      "krishnamurti",
+      "true citra",
+      "fagan",
+      "sayana"
+    ],
+    "see_also": [
+      "sidereal_longitude",
+      "swiss_ephemeris"
+    ]
+  },
+  {
+    "id": "sidereal_longitude",
+    "category": "sidereal",
+    "title": {
+      "en": "Sidereal longitude & rashi",
+      "iast": "Nirayana longitude; r\u0101\u015bi",
+      "devanagari": "\u0928\u093f\u0930\u092f\u0923 \u0926\u0947\u0936\u093e\u0928\u094d\u0924\u0930; \u0930\u093e\u0936\u093f"
+    },
+    "summary": {
+      "en": "Position of a graha in the fixed zodiac; 30\u00b0 rashi bands from Mesha.",
+      "iast": "Position of a graha in the fixed zodiac; 30\u00b0 r\u0101\u015bi bands.",
+      "devanagari": "\u0928\u0915\u094d\u0937\u0924\u094d\u0930-\u0930\u093e\u0936\u093f \u092e\u0947\u0902 \u0917\u094d\u0930\u0939 \u0938\u094d\u0925\u093f\u0924\u093f"
+    },
+    "detail": "Every graha's sidereal longitude is its ecliptic position measured from the ayan\u0101\u1e41\u015ba-corrected zero point. The 360\u00b0 belt is divided into 12 r\u0101\u015bis of 30\u00b0: Mesha, Vrishabha, Mithuna, Karka, Simha, Kanya, Tula, Vrischika, Dhanu, Makara, Kumbha, Meena. The engine computes longitude via the Swiss Ephemeris and derives rashi, nakshatra, pada and house from it.",
+    "formula": "sidereal = (swe.calc_ut(jd, planet, FLG_SIDEREAL)) mod 360\nrashi = floor(sidereal / 30.0) mod 12",
+    "example": "In the 1990-06-15 10:30 IST sample chart, Surya sits in Mithuna (rashi 2) and Chandra in Kumbha (rashi 10).",
+    "source": "Swiss Ephemeris sidereal mode; S\u016brya Siddh\u0101nta r\u0101\u015bi divisions.",
+    "keywords": [
+      "sidereal",
+      "longitude",
+      "rashi",
+      "rasi",
+      "mesha",
+      "mina",
+      "navamsha base"
+    ],
+    "see_also": [
+      "ayanamsa",
+      "graha",
+      "lagna"
+    ]
+  },
+  {
+    "id": "swiss_ephemeris",
+    "category": "sidereal",
+    "title": {
+      "en": "Swiss Ephemeris engine",
+      "iast": "Swiss Ephemeris",
+      "devanagari": "\u0938\u094d\u0935\u093f\u0938 \u090f\u092b\u093c\u0947\u092e\u0947\u0930\u093f\u0938"
+    },
+    "summary": {
+      "en": "The high-precision astronomical library powering all geometry.",
+      "iast": "The high-precision astronomical library powering all geometry.",
+      "devanagari": "\u0938\u091f\u0940\u0915 \u0916\u0917\u094b\u0932\u0940\u092f \u0917\u0923\u0928\u093e \u0915\u0947 \u0932\u093f\u090f \u092a\u0941\u0938\u094d\u0924\u0915\u093e\u0932\u092f"
+    },
+    "detail": "K\u0101laYantra performs all astronomical computation through the Swiss Ephemeris (pyswisseph): planetary positions, rise/set events, retrograde detection via the speed vector, house cusps (swe.houses), and sidereal/tropical frames. Positions use the pack's embedded Moshier/Swiss data, so everything runs 100% offline and privacy-preserving.",
+    "formula": "K\u0101laYantra wraps swe.calc_ut / rise\u2013transit / swe.houses under KalaChakra.get_planetary_longitudes(), get_transit(), get_sun_moon_rise_set(), calculate_kundali() and friends.",
+    "example": "Retrograde status is read from the ephemeris speed vector: retro = speed < 0; Rahu/Ketu are always taken as their mean node (Ketu = Rahu + 180\u00b0).",
+    "source": "Astrodienst Swiss Ephemeris (GPL/AGPL data sets; pyswisseph).",
+    "keywords": [
+      "swiss ephemeris",
+      "pyswisseph",
+      "swe",
+      "astronomy",
+      "ephemeris",
+      "offline"
+    ],
+    "see_also": [
+      "ayanamsa",
+      "sidereal_longitude"
+    ]
+  },
+  {
+    "id": "graha",
+    "category": "graha",
+    "title": {
+      "en": "Graha \u2014 the nine planets",
+      "iast": "Graha / Navagraha",
+      "devanagari": "\u0917\u094d\u0930\u0939 / \u0928\u0935\u0917\u094d\u0930\u0939"
+    },
+    "summary": {
+      "en": "Surya, Chandra, Mangala, Budha, Guru, Shukra, Shani, Rahu, Ketu.",
+      "iast": "S\u016brya, Chandra, Ma\u1e45gala, Budha, Guru, \u015aukra, \u015aani, R\u0101hu, Ketu.",
+      "devanagari": "\u0938\u0942\u0930\u094d\u092f, \u091a\u0928\u094d\u0926\u094d\u0930, \u092e\u0902\u0917\u0932, \u092c\u0941\u0927, \u0917\u0941\u0930\u0941, \u0936\u0941\u0915\u094d\u0930, \u0936\u0928\u093f, \u0930\u093e\u0939\u0941, \u0915\u0947\u0924\u0941"
+    },
+    "detail": "Jyoti\u1e63a works with nine grahas: the seven classical planets plus the two lunar nodes R\u0101hu and Ketu (modeled as the mean lunar nodes; Ketu is always 180\u00b0 from R\u0101hu). Grahas carry longitude, r\u0101\u015bi, nak\u1e63atra and p\u0101da, plus dynamic status like dignity, combustion, retrogression and house placement. The engine indexes them 0\u20138 and reports all nine (with the Moon and lagna) in every kundali.",
+    "formula": "graha positions from swe.calc_ut in the sidereal frame; Rahu/Ketu from the mean node with Ketu = (Rahu + 180\u00b0) mod 360.",
+    "example": "Index order in K\u0101laYantra: 0 Surya, 1 Chandra, 2 Mangala, 3 Budha, 4 Guru, 5 Shukra, 6 Shani, 7 Rahu, 8 Ketu.",
+    "source": "Classical Navagraha system; S\u016brya Siddh\u0101nta; B\u1e5bhat J\u0101taka.",
+    "keywords": [
+      "navagraha",
+      "planets",
+      "surya",
+      "chandra",
+      "mangala",
+      "budha",
+      "guru",
+      "shukra",
+      "shani",
+      "rahu",
+      "ketu"
+    ],
+    "see_also": [
+      "dignity",
+      "combustion",
+      "retrograde",
+      "drishti",
+      "graha_yuddha",
+      "conjunction"
+    ]
+  },
+  {
+    "id": "dignity",
+    "category": "graha",
+    "title": {
+      "en": "Dignity \u2014 strength of placement",
+      "iast": "Bal\u0101vasth\u0101 / Dignity",
+      "devanagari": "\u092c\u0932 / \u0909\u091a\u094d\u091a-\u0928\u0940\u091a"
+    },
+    "summary": {
+      "en": "Exalted, debilitated, own-sign, moolatrikona, friendly, enemy, neutral.",
+      "iast": "Uccha, N\u012bcha, Sva-k\u1e63etra, M\u016blatriko\u1e47a, Mitra, \u015aatru, Sama.",
+      "devanagari": "\u0909\u091a\u094d\u091a, \u0928\u0940\u091a, \u0938\u094d\u0935\u0915\u094d\u0937\u0947\u0924\u094d\u0930, \u092e\u0942\u0932\u0924\u094d\u0930\u093f\u0915\u094b\u0923, \u092e\u093f\u0924\u094d\u0930, \u0936\u0924\u094d\u0930\u0941, \u0938\u092e"
+    },
+    "detail": "A graha's dignity rates how comfortably it sits in its r\u0101\u015bi: Uccha (exalted), N\u012bcha (debilitated, the opposite sign), Svak\u1e63etra (own sign), M\u016blatriko\u1e47a (its strongest own area), or friend's/enemy's/neutral sign. The engine reads the exaltation and ownership tables, then deterministically classifies every graha (planets 0\u20136; the nodes carry no dignity). KalaBodha exposes the dignity code on every graha fact sheet.",
+    "formula": "exaltations = {Surya: Mesha, Chandra: Vrishabha, Mangala: Makara, Budha: Kanya, Guru: Karka, Shukra: Meena, Shani: Tula}\ndebiliation = exaltation + 6 signs; own/moolatrikona via ownership tables.",
+    "example": "Surya (index 0) is exalted in Mesha (0) and debilitated in Tula (6).",
+    "source": "B\u1e5bhat J\u0101taka; Phalad\u012bpik\u0101.",
+    "keywords": [
+      "exalted",
+      "debilitated",
+      "own sign",
+      "moolatrikona",
+      "uccha",
+      "neecha",
+      "swakshetra",
+      "dignity"
+    ],
+    "see_also": [
+      "graha",
+      "combustion",
+      "retrograde"
+    ]
+  },
+  {
+    "id": "combustion",
+    "category": "graha",
+    "title": {
+      "en": "Combustion (Asta)",
+      "iast": "Asta",
+      "devanagari": "\u0905\u0938\u094d\u0924 (\u0926\u093e\u0939)"
+    },
+    "summary": {
+      "en": "A planet is 'burnt' when it lies within the Sun's influence orb.",
+      "iast": "A graha is asta (burnt) when too close to the Sun.",
+      "devanagari": "\u0938\u0942\u0930\u094d\u092f \u0915\u0947 \u0928\u093f\u0915\u091f \u0917\u094d\u0930\u0939 \u0905\u0938\u094d\u0924 \u0939\u094b\u0924\u093e \u0939\u0948"
+    },
+    "detail": "A graha near the Sun is considered combust (asta) \u2014 weakened or outshone \u2014 within a graha-specific orb. The engine uses the classical elongation orbs per planet to flag combustion, which shows up as a status marker in the kundali and KalaBodha facts. R\u0101hu and Ketu are never combust; the Sun itself is the reference.",
+    "formula": "combust if elongation \u2264 orb where orbs = {Chandra 12\u00b0, Mangala 17\u00b0, Budha 14\u00b0, Guru 11\u00b0, Shukra 10\u00b0, Shani 15\u00b0}.",
+    "example": "Shukra 8\u00b0 from the Sun is combust; Shukra 25\u00b0 from the Sun is not.",
+    "source": "Classical combustion orbs (B\u1e5bhat J\u0101taka; Muh\u016brta literature).",
+    "keywords": [
+      "combust",
+      "asta",
+      "burnt",
+      "burning",
+      "near sun"
+    ],
+    "see_also": [
+      "graha",
+      "dignity"
+    ]
+  },
+  {
+    "id": "retrograde",
+    "category": "graha",
+    "title": {
+      "en": "Retrograde (Vakri)",
+      "iast": "Vakr\u012b",
+      "devanagari": "\u0935\u0915\u094d\u0930\u0940"
+    },
+    "summary": {
+      "en": "Apparent backward motion of a graha relative to the stars.",
+      "iast": "Apparent backward motion of a graha relative to the stars.",
+      "devanagari": "\u0917\u094d\u0930\u0939 \u0915\u0940 \u092a\u094d\u0930\u0924\u0940\u0924 \u092a\u094d\u0930\u0924\u093f\u0917\u093e\u092e\u0940 \u0917\u0924\u093f"
+    },
+    "detail": "From Earth a planet can appear to move backward (vakr\u012b) against the fixed zodiac near its station points. Jyoti\u1e63a gives retrograde grahas special strength and a behavior reversal. The engine detects retrogression directly from the ephemeris speed vector; R\u0101hu and Ketu (mean nodes) are always treated as moving.",
+    "formula": "retro = ephemeris speed < 0; reported on every graha and transit.",
+    "example": "Shani retrograde is a familiar slow station; the /kundali output carries a 'retro': true flag on the graha.",
+    "source": "Ephemeris apparent-motion computation; B\u1e5bhat J\u0101taka treatment of vakra.",
+    "keywords": [
+      "retrograde",
+      "vakri",
+      "stations",
+      "apparent motion",
+      "backward"
+    ],
+    "see_also": [
+      "graha",
+      "gochara"
+    ]
+  },
+  {
+    "id": "drishti",
+    "category": "graha",
+    "title": {
+      "en": "Drishti \u2014 planetary aspects",
+      "iast": "D\u1e5b\u1e63\u1e6di",
+      "devanagari": "\u0926\u0943\u0937\u094d\u091f\u093f"
+    },
+    "summary": {
+      "en": "The houses a graha 'looks at'; special aspects for Shani, Guru, Mangala.",
+      "iast": "The houses a graha 'looks at'; special aspects for \u015aani, Guru, Ma\u1e45gala.",
+      "devanagari": "\u0917\u094d\u0930\u0939\u094b\u0902 \u0915\u0940 \u0926\u0943\u0937\u094d\u091f\u093f\u092f\u093e\u0901"
+    },
+    "detail": "D\u1e5b\u1e63\u1e6di is how grahas interact at distance. All grahas aspect the 7th house; Shani adds 3rd and 10th; Guru adds 5th and 9th; Mangala adds 4th and 8th; the nodes use the Jaimini system (5th/9th). KalaBodha computes both Parashari and Jaimini drishti and the engine exposes the house offsets each graha aspects.",
+    "formula": "full: 7th; Shani +3/+10; Guru +5/+9; Mangala +4/+8; Jaimini for nodes: +5/+9.",
+    "example": "Guru in Mesha aspects the 5th (Simha), 7th (Tula) and 9th (Dhanu) houses \u2014 exactly what KalaMedha reports for 'What does Guru aspect?'.",
+    "source": "Par\u0101\u015bari system (B\u1e5bhat Par\u0101\u015bara Hor\u0101\u015b\u0101stra); Jaimini (R\u0101hu/Ketu).",
+    "keywords": [
+      "aspect",
+      "drishti",
+      "drishti",
+      "houses aspect",
+      "jaimini",
+      "parashari"
+    ],
+    "see_also": [
+      "graha",
+      "conjunction"
+    ]
+  },
+  {
+    "id": "graha_yuddha",
+    "category": "graha",
+    "title": {
+      "en": "Graha Yuddha \u2014 planetary war",
+      "iast": "Graha Yuddha",
+      "devanagari": "\u0917\u094d\u0930\u0939 \u092f\u0941\u0926\u094d\u0927"
+    },
+    "summary": {
+      "en": "When two grahas occupy the same sign within 1\u00b0, the higher latitude wins.",
+      "iast": "Same-sign conjunction within 1\u00b0; the higher ecliptic latitude wins.",
+      "devanagari": "\u090f\u0915 \u0930\u093e\u0936\u093f \u092e\u0947\u0902 \u0926\u094b \u0917\u094d\u0930\u0939 \u2014 \u092f\u0941\u0926\u094d\u0927"
+    },
+    "detail": "When two grahas conjoin in the same r\u0101\u015bi within 1\u00b0 of longitude a 'planetary war' is declared and the winner's result is delivered while the loser's is cancelled (B\u1e5bhat J\u0101taka rule). The engine implements the classical rule with the refinements: a retrograde combatant, a combust graha, and the Sun cannot be defeated; otherwise the higher ecliptic latitude wins. KalaBodha emits a dedicated yuddha record.",
+    "formula": "war if same sign and |lonA \u2212 lonB| < 1\u00b0; winner by latitude (higher wins), with retro/combustion overrides.",
+    "example": "Two grahas at 12\u00b020\u2032 and 12\u00b050\u2032 of the same sign at 5\u00b0 and 8\u00b0 latitude \u2192 the 8\u00b0-latitude graha wins.",
+    "source": "B\u1e5bhat J\u0101taka (Graha Yuddha); classical jyoti\u1e63a doctrine.",
+    "keywords": [
+      "yuddha",
+      "war",
+      "planetary war",
+      "battle",
+      "1 degree orb"
+    ],
+    "see_also": [
+      "conjunction",
+      "graha"
+    ]
+  },
+  {
+    "id": "conjunction",
+    "category": "graha",
+    "title": {
+      "en": "Conjunction (Yuti)",
+      "iast": "Yuti",
+      "devanagari": "\u092f\u0941\u0924\u093f"
+    },
+    "summary": {
+      "en": "Two or more grahas in the same sign blend their results.",
+      "iast": "Two or more grahas in the same sign blend their results.",
+      "devanagari": "\u090f\u0915 \u0939\u0940 \u0930\u093e\u0936\u093f \u092e\u0947\u0902 \u0917\u094d\u0930\u0939\u094b\u0902 \u0915\u093e \u092e\u093f\u0932\u0928"
+    },
+    "detail": "Same-r\u0101\u015bi placement is read as a conjunction (yuti); the joined grahas exchange results and, in the same nak\u1e63atra, blend on the pada level. KalaBodha groups same-sign grahas, flags those sharing a nak\u1e63atra, and the engine reports each graha's conjunction set in the chart.",
+    "formula": "group by rashi index; flag same-nakshatra members.",
+    "example": "Surya and Guru both in Mithuna \u2192 a conjunction bundle;\nKalaBodha lists them together and KalaMedha reasons over both.",
+    "source": "Classical jyoti\u1e63a conjunction doctrine.",
+    "keywords": [
+      "conjunction",
+      "yuti",
+      "together",
+      "same sign",
+      "join"
+    ],
+    "see_also": [
+      "graha",
+      "drishti",
+      "graha_yuddha"
+    ]
+  },
+  {
+    "id": "lagna",
+    "category": "lagna",
+    "title": {
+      "en": "Lagna \u2014 the ascendant",
+      "iast": "Lagna",
+      "devanagari": "\u0932\u0917\u094d\u0928"
+    },
+    "summary": {
+      "en": "The sign rising on the eastern horizon at the birth moment.",
+      "iast": "The sign rising on the eastern horizon at the birth moment.",
+      "devanagari": "\u091c\u0928\u094d\u092e \u0915\u0947 \u0938\u092e\u092f \u092a\u0942\u0930\u094d\u0935 \u0915\u094d\u0937\u093f\u0924\u093f\u091c \u092a\u0930 \u0909\u0926\u093f\u0924 \u0930\u093e\u0936\u093f"
+    },
+    "detail": "The lagna is the r\u0101\u015bi rising over the eastern horizon at the moment of interest, and the whole-sign house system then numbers houses from it. Its lord (lagnesh) colours the entire chart. The engine computes the house cusps with the Swiss Ephemeris, takes the ascendant degree, applies the ayan\u0101\u1e41\u015ba for the sidereal frame and derives rashi, nak\u1e63atra and p\u0101da \u2014 plus lagnesh identification.",
+    "formula": "asc = ascendant degree from swe.houses(jd, lat, lon, Placidus)\nsidereal asc = (asc \u2212 ayan\u0101\u1e41\u015ba) mod 360; rashi = floor(asc/30).",
+    "example": "For the 1990-06-15 10:30 IST Chennai sample the rising point falls in Simha (Leo), making Surya the lagnesh.",
+    "source": "Classical ascendant doctrine; Swiss Ephemeris house cusps.",
+    "keywords": [
+      "ascendant",
+      "rising sign",
+      "lagna",
+      "lagnesh",
+      "first house",
+      "birth sign"
+    ],
+    "see_also": [
+      "graha",
+      "sidereal_longitude",
+      "varga"
+    ]
+  },
+  {
+    "id": "varga",
+    "category": "varga",
+    "title": {
+      "en": "Varga \u2014 divisional charts (D1\u2013D60)",
+      "iast": "Varga",
+      "devanagari": "\u0935\u0930\u094d\u0917"
+    },
+    "summary": {
+      "en": "Sixteen harmonic charts exposing different realms of life.",
+      "iast": "Sixteen harmonic charts exposing different realms of life.",
+      "devanagari": "\u0938\u094b\u0932\u0939 \u0935\u0930\u094d\u0917 \u2014 \u091c\u0940\u0935\u0928 \u0915\u0947 \u0935\u093f\u092d\u093f\u0928\u094d\u0928 \u0915\u094d\u0937\u0947\u0924\u094d\u0930"
+    },
+    "detail": "The sixteen vargas divide the zodiac into divisions: D1 (rashi), D2\u2013D12 and beyond each emphasise a specific life area (D9 nav\u0101\u1e41\u015ba for the spouse, D10 karma, D3 siblings/Drekkana, etc.). K\u0101laYantra renders all 18 divisional charts D1\u2013D60 using the classical Par\u0101\u015bara allocations (as in Jagannatha Hora): D2 with even-sign reversal, element-based D4/D8/D16/D20/D27/D45, special D10/D12/D24/D40/D60 sign anchors, and unequal-arc D30 (trimsamsa); only D7, D8, D11, D16, D20 and D27 coincide with a plain continuous harmonic folding.",
+    "formula": "Per-division classical rule (see KalaVartika.varga_sign); a pure harmonic floor( longitude \u00d7 divisor / 30 ) is used only where it matches the classical allocation (D7, D8, D11, D16, D20, D27).",
+    "example": "A graha at 10\u00b0 of a sign maps to the 1st Drekkana (0\u201310\u00b0) and the 4th Nav\u0101\u1e41\u015ba quarter (10\u00b0\u00d79/30 \u2192 quarter 4).",
+    "source": "B\u1e5bhat Par\u0101\u015bara Hor\u0101\u015b\u0101stra (Varga schemes).",
+    "keywords": [
+      "divisional",
+      "varga",
+      "harmonic",
+      "d1",
+      "d9",
+      "d10",
+      "d60",
+      "sashtiamsa"
+    ],
+    "see_also": [
+      "navamsa",
+      "drekkana",
+      "lagna"
+    ]
+  },
+  {
+    "id": "navamsa",
+    "category": "varga",
+    "title": {
+      "en": "Navamsa (D9)",
+      "iast": "Nav\u0101\u1e41\u015ba",
+      "devanagari": "\u0928\u0935\u093e\u0902\u0936"
+    },
+    "summary": {
+      "en": "The ninth-harmonic chart: spouse, dharma and inner strength.",
+      "iast": "The ninth-harmonic chart: spouse, dharma and inner strength.",
+      "devanagari": "\u0928\u0935\u093e\u0902\u0936 \u2014 \u091c\u0940\u0935\u0928\u0938\u093e\u0925\u0940 \u0935 \u0927\u0930\u094d\u092e"
+    },
+    "detail": "Each 30\u00b0 sign is split into nine 3\u00b020\u2032 parts; the nav\u0101\u1e41\u015ba sign is counted from the sign of the same element as the natal sign (the classical allocation: from Mesha for fire, etc.). The engine computes D9 for every graha and lagna and flags Vargottama when a graha occupies the same sign in D1 and D9.",
+    "formula": "nav\u0101\u1e41\u015ba sign = (sign_of_part + floor(deg_in_sign / 3.3333) \u2212 1) re-indexed within the element sequence.",
+    "example": "Kanya (6) graha at 7\u00b0 \u2192 part 3 \u2192 third nav\u0101\u1e41\u015ba of Kanya element \u2192 Vrishabha.",
+    "source": "B\u1e5bhat Par\u0101\u015bara Hor\u0101\u015b\u0101stra (Nav\u0101\u1e41\u015ba).",
+    "keywords": [
+      "navamsa",
+      "d9",
+      "ninth harmonic",
+      "vargottama",
+      "spouse chart"
+    ],
+    "see_also": [
+      "varga",
+      "lagna"
+    ]
+  },
+  {
+    "id": "drekkana",
+    "category": "varga",
+    "title": {
+      "en": "Drekkana (D3)",
+      "iast": "Drekk\u0101\u1e47a",
+      "devanagari": "\u0926\u094d\u0930\u0947\u0915\u094d\u0915\u093e\u0923"
+    },
+    "summary": {
+      "en": "The third-harmonic chart: courage, siblings and initiative.",
+      "iast": "The third-harmonic chart: courage, siblings and initiative.",
+      "devanagari": "\u0926\u094d\u0930\u0947\u0915\u094d\u0915\u093e\u0923 \u2014 \u092d\u093e\u0908-\u092c\u0939\u0928 \u0935 \u0938\u093e\u0939\u0938"
+    },
+    "detail": "Each sign divides into three 10\u00b0 drekk\u0101\u1e47as, counted from the rashi itself: the 1st maps to the natal sign, the 2nd to the 4th sign from it, and the 3rd to the 8th sign from it. D3 is a classical varga for courage and siblings. The engine reports D3 alongside D9 in every chart.",
+    "formula": "drekk\u0101\u1e47a sign = (natal sign + 0, +4, or +8 signs) for the 1st (0\u201310\u00b0), 2nd (10\u201320\u00b0), 3rd (20\u201330\u00b0) third.",
+    "example": "Karka (3) graha at 15\u00b0 \u2192 second drekk\u0101\u1e47a \u2192 sign (3+4) = Simha (4).",
+    "source": "B\u1e5bhat Par\u0101\u015bara Hor\u0101\u015b\u0101stra (Drekk\u0101\u1e47a).",
+    "keywords": [
+      "drekkana",
+      "d3",
+      "third harmonic",
+      "siblings"
+    ],
+    "see_also": [
+      "varga"
+    ]
+  },
+  {
+    "id": "vimshottari",
+    "category": "dasha",
+    "title": {
+      "en": "Vimshottari \u2014 the 120-year dasha cycle",
+      "iast": "Vim\u015bottar\u012b",
+      "devanagari": "\u0935\u093f\u0902\u0936\u094b\u0924\u094d\u0924\u0930\u0940"
+    },
+    "summary": {
+      "en": "The most-used period system: 120 years shared by nine grahas.",
+      "iast": "The most-used period system: 120 years shared by nine grahas.",
+      "devanagari": "120-\u0935\u0930\u094d\u0937\u0940\u092f \u092e\u0939\u093e\u0926\u0936\u093e \u091a\u0915\u094d\u0930"
+    },
+    "detail": "Vim\u015bottar\u012b runs a fixed 120-year cycle of nine mah\u0101dash\u0101s whose lord sequence starts from the nak\u1e63atra occupied by the Moon at birth: Ketu 7, Shukra 20, Surya 6, Chandra 10, Mangala 7, Rahu 18, Guru 16, Shani 19, Budha 17 years. K\u0101laYantra computes the starting lord and the remaining balance from the fraction of the Moon's nak\u1e63atra already elapsed, then emits the full timeline with antardashas and pratyantardashas.",
+    "formula": "order = [Ketu, Shukra, Surya, Chandra, Mangala, Rahu, Guru, Shani, Budha]\nyears = [7, 20, 6, 10, 7, 18, 16, 19, 17]\nbalance = (1 \u2212 nak\u1e63atra_elapsed_fraction) \u00d7 years[start_lord]",
+    "example": "In the 1990-06-15 10:30 IST sample chart the Moon's nak\u1e63atra makes Rahu the first lord with 3.04 years remaining.",
+    "source": "B\u1e5bhat Par\u0101\u015bara Hor\u0101\u015b\u0101stra; Vim\u015bottar\u012b doctrine.",
+    "keywords": [
+      "vimshottari",
+      "dasha",
+      "mahadasha",
+      "120 years",
+      "balance",
+      "period system"
+    ],
+    "see_also": [
+      "mahadasha",
+      "nakshatra"
+    ]
+  },
+  {
+    "id": "mahadasha",
+    "category": "dasha",
+    "title": {
+      "en": "Mahadasha / Antardasha hierarchy",
+      "iast": "Mah\u0101da\u015b\u0101 / Antar-da\u015b\u0101",
+      "devanagari": "\u092e\u0939\u093e\u0926\u0936\u093e / \u0905\u0902\u0924\u0930\u094d\u0926\u0936\u093e"
+    },
+    "summary": {
+      "en": "Sub-periods inside each mahadasha, proportionally subdivided.",
+      "iast": "Sub-periods inside each mahadasha, proportionally subdivided.",
+      "devanagari": "\u092e\u0939\u093e\u0926\u0936\u093e \u0915\u0947 \u092d\u0940\u0924\u0930 \u0909\u092a-\u0905\u0935\u0927\u093f\u092f\u093e\u0901"
+    },
+    "detail": "Each mah\u0101dash\u0101 is further divided into antardash\u0101s whose lengths are proportional to the mah\u0101dash\u0101 years: antardash\u0101 length = (sub-lord years / 120) \u00d7 parent years. Pratyantardash\u0101s subdivide again the same way. The engine's dasha tree reports the current Mahadasha / Antardasha / Pratyantardasha triad on every chart.",
+    "formula": "sub_years = parent_years \u00d7 lord_years / 120  (recursed per level).",
+    "example": "If Guru (16) mah\u0101dash\u0101 has Shukra (20) antardash\u0101: duration = 16 \u00d7 20 / 120 = 2.67 years.",
+    "source": "Vim\u015bottar\u012b doctrine (B\u1e5bhat Par\u0101\u015bara Hor\u0101\u015b\u0101stra).",
+    "keywords": [
+      "antardasha",
+      "pratyantardasha",
+      "sub period",
+      "dasha hierarchy",
+      "current dasha"
+    ],
+    "see_also": [
+      "vimshottari"
+    ]
+  },
+  {
+    "id": "gochara",
+    "category": "gochara",
+    "title": {
+      "en": "Gochara \u2014 current transits",
+      "iast": "Goc\u0101ra",
+      "devanagari": "\u0917\u094b\u091a\u0930"
+    },
+    "summary": {
+      "en": "Where the grahas are now, against the natal chart.",
+      "iast": "Where the grahas are now, against the natal chart.",
+      "devanagari": "\u0935\u0930\u094d\u0924\u092e\u093e\u0928 \u092e\u0947\u0902 \u0917\u094d\u0930\u0939\u094b\u0902 \u0915\u0940 \u0938\u094d\u0925\u093f\u0924\u093f"
+    },
+    "detail": "Goc\u0101ra compares the current (transit) zodiac against a natal chart: each transit graha's r\u0101\u015bi, bh\u0101va from the natal lagna, dignity and retrogression, plus the houses it aspects from its transit sign. K\u0101laYantra's /gochara endpoint and Gochara UI also track tight 1\u00b0 transits crossing natal planets and the dates slow grahas enter their next sign.",
+    "formula": "transit position from swe.calc_ut at the transit moment;\nhouse = (transit_rashi \u2212 natal_lagna_rashi) mod 12.",
+    "example": "Shani travelling Tula is Ashtama \u015aani for a Moon in Meena (8 houses from the natal Moon).",
+    "source": "Common transit (goc\u0101ra) practice; classical jyoti\u1e63a.",
+    "keywords": [
+      "transit",
+      "gochara",
+      "current planets",
+      "transiting",
+      "daily movement"
+    ],
+    "see_also": [
+      "sade_sati",
+      "guru_gochara"
+    ]
+  },
+  {
+    "id": "sade_sati",
+    "category": "gochara",
+    "title": {
+      "en": "Sade Sati \u2014 the seven-and-a-half years of Shani",
+      "iast": "S\u0101\u1e0dhe S\u0101t\u012b",
+      "devanagari": "\u0938\u093e\u0922\u093c\u0947 \u0938\u093e\u0924\u0940"
+    },
+    "summary": {
+      "en": "Shani transiting the 12th, 1st and 2nd from the natal Moon \u2248 7.5 years.",
+      "iast": "\u015aani transiting the 12th, 1st and 2nd from the natal Moon.",
+      "devanagari": "\u091c\u0928\u094d\u092e \u091a\u0928\u094d\u0926\u094d\u0930 \u0938\u0947 \u0967\u0968\u0935\u0947\u0902, \u0967 \u0935\u0947\u0902 \u0935 \u0968\u0935\u0947\u0902 \u0918\u0930 \u092e\u0947\u0902 \u0936\u0928\u093f"
+    },
+    "detail": "When \u015aani transits the house before, on, and after the natal Moon in sequence, the classic S\u0101\u1e0dhe S\u0101t\u012b window (~seven and a half years) is in force. K\u0101laYantra detects all three phases and names each, so the Gochara view can tell exactly which part of the period is running and when it ends.",
+    "formula": "sade sati active if transit-chandra distance \u2208 {11, 0, 1} houses;\nphases = [12th, 1st, 2nd] with per-phase boundaries from sign entry.",
+    "example": "Moon in Kumbha \u2192 Shani in Makara / Kumbha / Meena marks the three\nconsecutive S\u0101\u1e0dhe S\u0101t\u012b phases.",
+    "source": "Classical \u015aani gochara tradition.",
+    "keywords": [
+      "sade sati",
+      "sade saati",
+      "shani",
+      "seven and half",
+      "saturn transit",
+      "phases"
+    ],
+    "see_also": [
+      "gochara",
+      "guru_gochara"
+    ]
+  },
+  {
+    "id": "guru_gochara",
+    "category": "gochara",
+    "title": {
+      "en": "Guru Gochara \u2014 Jupiter's transit",
+      "iast": "Guru Goc\u0101ra",
+      "devanagari": "\u0917\u0941\u0930\u0941 \u0917\u094b\u091a\u0930"
+    },
+    "summary": {
+      "en": "Guru's transit relative to its natal place and the lagna.",
+      "iast": "Guru's transit relative to its natal place and the lagna.",
+      "devanagari": "\u091c\u0928\u094d\u092e \u0917\u0941\u0930\u0941 \u0935 \u0932\u0917\u094d\u0928 \u0938\u0947 \u0917\u0941\u0930\u0941 \u0915\u0940 \u0938\u094d\u0925\u093f\u0924\u093f"
+    },
+    "detail": "Guru Goc\u0101ra measures Jupiter's current sign against both the natal Guru (its own return) and the natal lagna \u2014 the Gocara ladder of good (5th/7th/9th), neutral and hard houses. K\u0101laYantra's special transit yogas include Guru's return to its natal sign and the 9th house from lagna (a highly auspicious station).",
+    "formula": "guru_transit_house_from_lagna = (guru_now \u2212 lagna) mod 12; guru_return = (guru_now \u2212 natal_guru) mod 12.",
+    "example": "Natal Guru in Simha \u2192 Guru transiting Dhanu is the 5th from it (friendly) and aspects the natal chart strongly.",
+    "source": "Classical Guru gochara practice.",
+    "keywords": [
+      "guru gochara",
+      "jupiter transit",
+      "guru return",
+      "guru transit from lagna"
+    ],
+    "see_also": [
+      "gochara",
+      "sade_sati"
+    ]
+  },
+  {
+    "id": "ashtakoota",
+    "category": "compatibility",
+    "title": {
+      "en": "Ashtakoota \u2014 Guna Milan (36 points)",
+      "iast": "A\u1e63\u1e6dak\u016b\u1e6da",
+      "devanagari": "\u0905\u0937\u094d\u091f\u0915\u0942\u091f"
+    },
+    "summary": {
+      "en": "The eight-fold compatibility score out of 36 used in marriage matching.",
+      "iast": "The eight-fold compatibility score out of 36 used in marriage matching.",
+      "devanagari": "36 \u0917\u0941\u0923\u094b\u0902 \u092e\u0947\u0902 \u0935\u093f\u0935\u093e\u0939-\u092e\u093f\u0932\u093e\u0928"
+    },
+    "detail": "Guna Milan compares a bride and groom across eight kootas, each carrying points that sum to 36: Varna (1), Vashya (2), Tara (3), Yoni (4), Graha Maitri (5), Gana (6), Bhakoot (7) and Nadi (8). K\u0101laYantra accepts full birth data or the Moon's rashi/nakshatra directly, computes every koota with the classical rules, totals the score with a verdict, and flags the Nadi and Bhakoot doshas plus their cancellation conditions.",
+    "formula": "each koota applies its matching table (ex: Bhakoot from chandra-rashis, Nadi from nakshatra group, Yoni from species compatibility); total = \u03a3 points, verdict by the 36-point bands.",
+    "example": "A 32/36 score entering the 'good' band, with a Nadi dosha that is cancelled by identical rashi \u2014 both are reported explicitly.",
+    "source": "Classical Guna Milan tradition (Pa\u00f1ch\u0101nga / Viv\u0101ha muh\u016brta texts).",
+    "keywords": [
+      "ashtakoota",
+      "guna milan",
+      "koota",
+      "compatibility",
+      "match",
+      "36 points",
+      "nadi",
+      "bhakoot",
+      "yoni"
+    ],
+    "see_also": [
+      "nakshatra",
+      "graha"
+    ]
+  },
+  {
+    "id": "hora",
+    "category": "muhurta",
+    "title": {
+      "en": "Hora \u2014 hourly lords",
+      "iast": "Hor\u0101",
+      "devanagari": "\u0939\u094b\u0930\u093e"
+    },
+    "summary": {
+      "en": "The 24 Chaldean hours ruled in turn by the seven grahas.",
+      "iast": "The 24 Chaldean hours ruled in turn by the seven grahas.",
+      "devanagari": "24 \u0918\u0902\u091f\u094b\u0902 \u092a\u0930 \u0917\u094d\u0930\u0939 \u0938\u094d\u0935\u093e\u092e\u093f\u0924\u094d\u0935"
+    },
+    "detail": "The day is divided into 12 daytime (sunrise to sunset) and 12 nighttime horas, named in the Chaldean order. The first hour of Sunday belongs to the Sun, Monday to the Moon, and so on; each subsequent hour steps backward through the planetary week order. The first hora's lord also names the weekday, which is how v\u0101ra gets its graha. K\u0101laYantra returns all 24 horas with their lords and an auspiciousness grade.",
+    "formula": "hora length = daylength/12 (day) or nightlength/12 (night); lord sequence = reverse planetary week starting from the weekday lord.",
+    "example": "Sunday sunrise hour is Surya, the next is Shukra, then Budha \u2026",
+    "source": "Chaldean/Jyoti\u1e63a hora doctrine.",
+    "keywords": [
+      "hora",
+      "hour lord",
+      "24 horas",
+      "chaldean",
+      "planetary hour"
+    ],
+    "see_also": [
+      "vaara",
+      "muhurta"
+    ]
+  },
+  {
+    "id": "muhurta",
+    "category": "muhurta",
+    "title": {
+      "en": "Muhurta \u2014 the 30 auspicious timings",
+      "iast": "Muh\u016brta",
+      "devanagari": "\u092e\u0941\u0939\u0942\u0930\u094d\u0924"
+    },
+    "summary": {
+      "en": "Fifteen daytime and fifteen nighttime muhurtas of the day.",
+      "iast": "Fifteen daytime and fifteen nighttime muh\u016brtas of the day.",
+      "devanagari": "\u0926\u093f\u0928-\u0930\u093e\u0924 \u0915\u0947 30 \u092e\u0941\u0939\u0942\u0930\u094d\u0924"
+    },
+    "detail": "Each half-day is split into fifteen muh\u016brtas of about 48 minutes. Each carries a name (Rudra, Ahi, Mitra, Pitri, Vasu, \u2026) and an auspiciousness class. K\u0101laYantra flags each as Abhijit / Auspicious / Neutral / Inauspicious by overlap with Rahu K\u0101la, Yamaghanta, Gulika and the auspicious Choghadiya windows.",
+    "formula": "muhurta_len = day_duration / 15; grade by overlap with the inauspicious/auspicious spans.",
+    "example": "The midday Abhijit muh\u016brta (~3.5 gha\u1e6d\u012bs around noon) always grades Auspicious and is recommended of all.",
+    "source": "Muh\u016brta tradition (B\u1e5bhat Sa\u1e41hit\u0101; Muh\u016brta Chint\u0101ma\u1e47i).",
+    "keywords": [
+      "muhurta",
+      "muhurt",
+      "auspicious time",
+      "30 muhurtas",
+      "abhijit",
+      "rudra"
+    ],
+    "see_also": [
+      "hora",
+      "rahu_kala",
+      "choghadiya",
+      "abhijit"
+    ]
+  },
+  {
+    "id": "rahu_kala",
+    "category": "muhurta",
+    "title": {
+      "en": "Rahu Kala, Yamaghanta & Gulika",
+      "iast": "R\u0101hu K\u0101la / Yamagh\u0101n\u1e6da / Gulik\u0101",
+      "devanagari": "\u0930\u093e\u0939\u0941 \u0915\u093e\u0932 / \u092f\u092e\u0918\u0902\u091f / \u0917\u0941\u0932\u093f\u0915"
+    },
+    "summary": {
+      "en": "The daily inauspicious windows ruled by the shadow grahas.",
+      "iast": "The daily inauspicious windows ruled by the shadow grahas.",
+      "devanagari": "\u092a\u094d\u0930\u0924\u093f\u0926\u093f\u0928 \u0915\u0947 \u0905\u0936\u0941\u092d \u0915\u093e\u0932"
+    },
+    "detail": "Each weekday holds fixed inauspicious spans: R\u0101hu K\u0101la (the eighth part of the day belonging to R\u0101hu), Yamagh\u0101n\u1e6da and Gulik\u0101 (segments of the day ruled by the shadow timings). Starting new ventures in these windows is avoided. K\u0101laYantra computes all three from daylight length for the date and location and marks them in the day view.",
+    "formula": "window = eighth of the day (sunrise\u2192sunset), shifted per weekday to the assigned portion; e.g. Sunday R\u0101hu K\u0101la is the 8th part.",
+    "example": "For Monday at Ujjain the day view shows R\u0101hu K\u0101la, Yamaghanta and Gulika as distinct colored spans.",
+    "source": "Classical K\u0101la custom (Muh\u016brta literature).",
+    "keywords": [
+      "rahu kala",
+      "rahu kal",
+      "yamaghanta",
+      "gulika",
+      "inauspicious",
+      "amrita kala"
+    ],
+    "see_also": [
+      "muhurta",
+      "choghadiya",
+      "abhijit"
+    ]
+  },
+  {
+    "id": "choghadiya",
+    "category": "muhurta",
+    "title": {
+      "en": "Choghadiya \u2014 the eight day-segments",
+      "iast": "Choghadiy\u0101",
+      "devanagari": "\u091a\u094c\u0918\u0921\u093c\u093f\u092f\u093e"
+    },
+    "summary": {
+      "en": "Day divided into 8 segments with alternating auspiciousness.",
+      "iast": "Day divided into 8 segments with alternating auspiciousness.",
+      "devanagari": "\u0926\u093f\u0928 \u0915\u0947 8 \u0935\u0930\u094d\u0917"
+    },
+    "detail": "Choghadiya splits the day (and separately the night) into eight sections each ruled in turn by a graha, giving a repeating auspicious/normal/inauspicious pattern widely used for travel and Indian business timing. K\u0101laYantra renders both daytime and nighttime choghadiy\u0101 with color-coded nature.",
+    "formula": "segment = day/8; lords cycle through the planetary order; nature per lord table.",
+    "example": "The Udveg segment is inauspicious for travel; Shubha is auspicious \u2014 both color-coded in the day panel.",
+    "source": "Popular Choghadiya panchanga usage (North/West India).",
+    "keywords": [
+      "choghadiya",
+      "chogadia",
+      "day segments",
+      "auspicious",
+      "travel time",
+      "udveg",
+      "shubh"
+    ],
+    "see_also": [
+      "muhurta",
+      "rahu_kala"
+    ]
+  },
+  {
+    "id": "abhijit",
+    "category": "muhurta",
+    "title": {
+      "en": "Abhijit Muhurta",
+      "iast": "Abhijit Muh\u016brta",
+      "devanagari": "\u0905\u092d\u093f\u091c\u093f\u0924 \u092e\u0941\u0939\u0942\u0930\u094d\u0924"
+    },
+    "summary": {
+      "en": "The nigh-noon muhurta that is almost always auspicious.",
+      "iast": "The nigh-noon muh\u016brta that is almost always auspicious.",
+      "devanagari": "\u092e\u0927\u094d\u092f\u093e\u0939\u094d\u0928 \u0915\u093e \u0936\u0941\u092d \u092e\u0941\u0939\u0942\u0930\u094d\u0924"
+    },
+    "detail": "Abhijit is the eighth muh\u016brta of the day, the ~48 minutes spanning local midday, and is blessed \u2014 so it is exempt from most inauspicious checks. K\u0101laYantra reports its window on every day record and grades it 'Auspicious' in the muhurta list.",
+    "formula": "abhijit = the middle fifteenth of daylight (daylength/15 centered on solar noon).",
+    "example": "Sunrise 06:12, sunset 18:34 \u2192 Abhijit \u2248 11:58\u201312:48.",
+    "source": "Muh\u016brta doctrine (Muh\u016brta Chint\u0101ma\u1e47i).",
+    "keywords": [
+      "abhijit",
+      "noon",
+      "auspicious",
+      "muhurta",
+      "midday"
+    ],
+    "see_also": [
+      "muhurta"
+    ]
+  },
+  {
+    "id": "ekadashi",
+    "category": "festival",
+    "title": {
+      "en": "Ekadashi \u2014 Smarta vs Vaishnava rules",
+      "iast": "Ek\u0101da\u015b\u012b",
+      "devanagari": "\u090f\u0915\u093e\u0926\u0936\u0940"
+    },
+    "summary": {
+      "en": "The 11th-tithi fast, with two observance traditions.",
+      "iast": "The 11th-tithi fast, with two observance traditions.",
+      "devanagari": "\u0917\u094d\u092f\u093e\u0930\u0939\u0935\u0940\u0902 \u0924\u093f\u0925\u093f \u0915\u093e \u0935\u094d\u0930\u0924"
+    },
+    "detail": "Ek\u0101da\u015b\u012b is a fast kept on the 11th tithi, but the two traditions differ on edge cases. Sm\u0101rta follows the udaya-vy\u0101pin\u012b rule: the day on which Ek\u0101da\u015b\u012b is running at sunrise (and for a two-sunrise V\u1e5bddha Ek\u0101da\u015b\u012b, the second day). Vai\u1e63\u1e47ava requires Ek\u0101da\u015b\u012b to begin before Arunodaya (96 min before sunrise); if it starts later the day is viddha and the fast moves to Dv\u0101da\u015b\u012b (Mah\u0101dv\u0101da\u015b\u012b / Atirikta). K\u0101laYantra implements both and records which rule matched on every festival.",
+    "formula": "smart\u0101: fast on the tithi-present-at-sunrise day; if present two days, the 2nd.\nvai\u1e63\u1e47ava: if Ek\u0101da\u015b\u012b begins after Arunodaya \u2192 fast on Dv\u0101da\u015b\u012b.",
+    "example": "A viddha Ek\u0101da\u015b\u012b on Tuesday pushes the Vai\u1e63\u1e47ava fast to Wednesday Dv\u0101da\u015b\u012b; the Sm\u0101rta list keeps Tuesday.",
+    "source": "Ek\u0101da\u015b\u012b observance traditions (Sm\u0101rta / Vai\u1e63\u1e47ava paddhati).",
+    "keywords": [
+      "ekadashi",
+      "dvadashi",
+      "fast",
+      "vaishnava",
+      "smarta",
+      "viddha",
+      "arunodaya",
+      "twadashi"
+    ],
+    "see_also": [
+      "tithi",
+      "festival_engine",
+      "kshaya_tithi"
+    ]
+  },
+  {
+    "id": "kshaya_tithi",
+    "category": "festival",
+    "title": {
+      "en": "Kshaya Tithi \u2014 the lost lunar day",
+      "iast": "K\u1e63aya Tithi",
+      "devanagari": "\u0915\u094d\u0937\u092f \u0924\u093f\u0925\u093f"
+    },
+    "summary": {
+      "en": "A tithi that is skipped because two successive days pass.",
+      "iast": "A tithi skipped when the Moon crosses it between sunrises.",
+      "devanagari": "\u091b\u0942\u091f\u0940 \u0939\u0941\u0908 \u0924\u093f\u0925\u093f"
+    },
+    "detail": "When the Moon gains more than 24\u00b0 between two consecutive sunrise readings, a whole tithi is skipped \u2014 the 'lost' (k\u1e63aya) tithi. Observances that fall on it are merged into the surrounding observance logic. K\u0101laYantra tracks k\u1e63aya days, merges custom observances and schedules Vaishnava Ek\u0101da\u015b\u012b to Dv\u0101da\u015b\u012b when the lost day interferes.",
+    "formula": "k\u1e63aya if tithi(elapsed) crosses an integer boundary twice in one day; flagged as is_tithi_N_kshaya on the day record.",
+    "example": "An am\u0101vasy\u0101 that vanishes is read as an extra-thin Krishna side; the engine marks the k\u1e63aya and adjusts festival merging.",
+    "source": "Pa\u00f1ch\u0101\u1e45ga k\u1e63aya doctrine.",
+    "keywords": [
+      "kshaya",
+      "kshaya tithi",
+      "skipped tithi",
+      "lost day",
+      "vriddha"
+    ],
+    "see_also": [
+      "tithi",
+      "festival_engine",
+      "ekadashi"
+    ]
+  },
+  {
+    "id": "sankranti",
+    "category": "festival",
+    "title": {
+      "en": "Sankranti \u2014 the Sun's sign entry",
+      "iast": "Sa\u1e45kr\u0101nti",
+      "devanagari": "\u0938\u0902\u0915\u094d\u0930\u093e\u0902\u0924\u093f"
+    },
+    "summary": {
+      "en": "The moment the Sun steps into the next rashi; basis of solar months.",
+      "iast": "The moment the Sun steps into the next r\u0101\u015bi; basis of solar months.",
+      "devanagari": "\u0938\u0942\u0930\u094d\u092f \u0915\u093e \u0930\u093e\u0936\u093f-\u092a\u094d\u0930\u0935\u0947\u0936"
+    },
+    "detail": "A sa\u1e45kr\u0101nti is the exact instant the Sun's sidereal longitude crosses into a new 30\u00b0 sign. These moments name the solar months (Saura), trigger festivals such as Makara Sa\u1e45kr\u0101nti, and bracket the lunar months' names. In Saura calendar mode K\u0101laYantra switches to solar months computed from consecutive sa\u1e45kr\u0101ntis and native Sankranti events are shown on the calendar.",
+    "formula": "find the jd where sun_lon mod 30 crosses 0 via transition search; solar day-of-month = floor((jd \u2212 sankranti_jd) within its month).",
+    "example": "Makara Sa\u1e45kr\u0101nti is the moment the Sun enters Makara \u2014 the engine reports that event with its exact local time.",
+    "source": "S\u016brya Siddh\u0101nta; Saura calendar doctrine.",
+    "keywords": [
+      "sankranti",
+      "sankrant",
+      "transit",
+      "sun sign change",
+      "solar month",
+      "makara sankranti"
+    ],
+    "see_also": [
+      "masa",
+      "saura_calendar",
+      "ayana"
+    ]
+  },
+  {
+    "id": "festival_engine",
+    "category": "festival",
+    "title": {
+      "en": "Festival engine (KalaUtsavachakra)",
+      "iast": "Utsavachakra",
+      "devanagari": "\u0909\u0924\u094d\u0938\u0935 \u091a\u0915\u094d\u0930"
+    },
+    "summary": {
+      "en": "The Dharma\u015b\u0101stra rule engine that decides which festival a day is.",
+      "iast": "The Dharma\u015b\u0101stra rule engine that decides which festival a day is.",
+      "devanagari": "\u0924\u094d\u092f\u094b\u0939\u093e\u0930\u094b\u0902 \u0915\u093e \u0928\u093f\u092f\u092e-\u0907\u0902\u091c\u0928"
+    },
+    "detail": "KalaUtsavachakra evaluates a library of festival definitions against the daily pa\u00f1ch\u0101\u1e45ga: fixed tithis with optional masa and paksha, complex dates (e.g. Vaishnava Ek\u0101da\u015b\u012b with the pushing rule), nakshatra-based observations and sa\u1e45kr\u0101nti events. Each match records its rule, a description, a color and a priority, and days can be filtered by the Sm\u0101rta or Vai\u1e63\u1e47ava rule set.",
+    "formula": "for each festival spec: match come/masa/paksha/tithi/nakshatra/sankranti predicates against the day; keep the highest-priority match.",
+    "example": "The calendar dot hierarchy \u2014 Ekadashi blue, Sankranti orange, Sankashti pink, festivals green \u2014 comes straight from the engine's priority field.",
+    "source": "Internal KalaUtsavachakra engine; Dharma\u015b\u0101stra festival rules.",
+    "keywords": [
+      "festival",
+      "utsav",
+      "vrat",
+      "festival rules",
+      "dharmashastra",
+      "observance"
+    ],
+    "see_also": [
+      "ekadashi",
+      "sankranti",
+      "kshaya_tithi"
+    ]
+  },
+  {
+    "id": "saura_calendar",
+    "category": "festival",
+    "title": {
+      "en": "Saura (solar) calendar",
+      "iast": "Saura m\u0101sa",
+      "devanagari": "\u0938\u094c\u0930 \u092e\u093e\u0938"
+    },
+    "summary": {
+      "en": "Solar months from Mesha to Meena bounded by sankrantis.",
+      "iast": "Solar months from Mesha to Meena bounded by sa\u1e45kr\u0101ntis.",
+      "devanagari": "\u0938\u0942\u0930\u094d\u092f-\u092e\u093e\u0938 \u2014 \u092e\u0947\u0937 \u0938\u0947 \u092e\u0940\u0928"
+    },
+    "detail": "The Saura system counts the year by the Sun alone: each solar month runs from one sa\u1e45kr\u0101nti to the next, named Mesha \u2026 Meena, with the Shaka era incrementing at Mesha Sa\u1e45kr\u0101nti. In this mode pakshas are hidden, day transitions are disabled and days count sequentially ('Solar Day 1\u202630/31/32') from the exact sa\u1e45kr\u0101nti moment. K\u0101laYantra switches the whole calendar to Saura via calendar_system=saura.",
+    "formula": "solar month = (sun_rashi + 1) and Shaka-era step at Mesha sa\u1e45kr\u0101nti; day = floor(jd \u2212 sankranti_jd) + 1.",
+    "example": "After Mesha Sa\u1e45kr\u0101nti, 'Solar Day 1 of Mesha' begins \u2014 with no tithi/paksha displayed.",
+    "source": "S\u016brya Siddh\u0101nta; Saura tradition (Tamizh/Kerala style).",
+    "keywords": [
+      "saura",
+      "solar calendar",
+      "solar month",
+      "mesha",
+      "solar day",
+      "sankranti based"
+    ],
+    "see_also": [
+      "sankranti",
+      "masa"
+    ]
+  },
+  {
+    "id": "traditional_mode",
+    "category": "method",
+    "title": {
+      "en": "Traditional vs Astronomical pa\u00f1ch\u0101\u1e45ga mode",
+      "iast": "Udaya-\u0101di vs current",
+      "devanagari": "\u092a\u0930\u092e\u094d\u092a\u0930\u093e\u0917\u0924 / \u0916\u0917\u094b\u0932\u0940\u092f \u092e\u094b\u0921"
+    },
+    "summary": {
+      "en": "Two ways to anchor which pa\u00f1ch\u0101\u1e45ga element a day shows.",
+      "iast": "Two ways to anchor which pa\u00f1ch\u0101\u1e45ga element a day shows.",
+      "devanagari": "\u0926\u093f\u0928 \u0915\u0947 \u092a\u0902\u091a\u093e\u0902\u0917-\u0905\u0902\u0917 \u091a\u0941\u0928\u0928\u0947 \u0915\u0947 \u0926\u094b \u0924\u0930\u0940\u0915\u0947"
+    },
+    "detail": "Traditional mode reads the five elements at sunrise (udaya-\u0101di) and keeps that element for the civil day; if it survives past the next sunrise only the surviving element is shown, otherwise sunrise and afternoon elements appear side by side. Astronomical (live) mode tracks the current element in real time with its transition. K\u0101laYantra's tithi_mode=traditional|current drives both the engine output and the panel display.",
+    "formula": "read at sunrise_jd; display logic: if element survives next sunrise \u2192 single; else sunrise + next pair.",
+    "example": "In traditional mode a tithi changing at 10:00 still labels the whole day by its sunrise tithi.",
+    "source": "Pa\u00f1ch\u0101\u1e45ga udaya-\u0101di convention.",
+    "keywords": [
+      "mode",
+      "traditional",
+      "astronomical",
+      "udaya",
+      "sunrise anchored",
+      "live",
+      "current"
+    ],
+    "see_also": [
+      "panchanga",
+      "sunrise_sunset"
+    ]
+  },
+  {
+    "id": "evidence_graph",
+    "category": "reasoning",
+    "title": {
+      "en": "KalaBodha evidence graph",
+      "iast": "Pram\u0101\u1e47a",
+      "devanagari": "\u092a\u094d\u0930\u092e\u093e\u0923"
+    },
+    "summary": {
+      "en": "Every conclusion carries its factors, rule and source.",
+      "iast": "Every conclusion carries its factors, rule and source.",
+      "devanagari": "\u0939\u0930 \u0928\u093f\u0937\u094d\u0915\u0930\u094d\u0937 \u0915\u0947 \u0938\u093e\u0925 \u0915\u093e\u0930\u0923 \u0935 \u0938\u094d\u0930\u094b\u0924"
+    },
+    "detail": "KalaBodha builds a machine-readable reasoning graph over the kundali: graha facts (dignity, status markers, conjunctions, yuddhas), drishti maps, a curated yoga engine and the evidence set connecting every conclusion to the factors that produced it, each tagged with its rule and classical source. This makes each chart assertion inspectable \u2014 why something is stated, and according to which text.",
+    "formula": "evidence = {statement, factors, rule, source, weight} produced by the analyzer given the kundali.",
+    "example": "'R\u0101hu forms Vipareeta Raja Yoga' arrives with the participating grahas, the kendra/trikona condition and its Phalad\u012bpik\u0101 quote.",
+    "source": "Internal KalaBodha engine; B\u1e5bhat J\u0101taka / Phalad\u012bpik\u0101 sourcing.",
+    "keywords": [
+      "evidence",
+      "reasoning",
+      "kala bodha",
+      "fact sheet",
+      "source",
+      "rule",
+      "graph"
+    ],
+    "see_also": [
+      "dignity",
+      "drishti",
+      "graha_yuddha"
+    ]
+  },
+  {
+    "id": "strengths_weaknesses",
+    "category": "reasoning",
+    "title": {
+      "en": "KalaMedha strengths & answers",
+      "iast": "Bala-krama",
+      "devanagari": "\u092c\u0932-\u0915\u094d\u0930\u092e"
+    },
+    "summary": {
+      "en": "Ranked graha strength with reasons, plus natural-language Q&A.",
+      "iast": "Ranked graha strength with reasons, plus natural-language Q&A.",
+      "devanagari": "\u0917\u094d\u0930\u0939-\u092c\u0932 \u0915\u094d\u0930\u092e \u0935 \u092a\u094d\u0930\u0936\u094d\u0928\u094b\u0924\u094d\u0924\u0930"
+    },
+    "detail": "KalaMedha turns the evidence graph into human language: a ranked, explainable strength score for all nine grahas (based on house, relationship to the Moon, yoga membership, dignity and status), the strongest/weakest synthesis, and an intent-based question answler for 'Where is Shani?', 'Is Guru strong?', 'What does Guru aspect?', 'What is the current dasha?' and similar. An optional local LLM hook can enrich the reading and falls back to the rule engine automatically.",
+    "formula": "score = \u03a3 weights over house placement, Chandra relation, yoga membership, dignity, status; answers route question intents onto bodha query results.",
+    "example": "'Why is Shani weak?' returns Shani's score and the exact reasons (e.g. 8th from lagna) rather than a canned sentence.",
+    "source": "Internal KalaMedha engine (rule-based + optional LLM).",
+    "keywords": [
+      "kala medha",
+      "strength",
+      "weakness",
+      "question answer",
+      "narrative",
+      "reading",
+      "ai",
+      "score"
+    ],
+    "see_also": [
+      "evidence_graph",
+      "dignity",
+      "mahadasha"
+    ]
+  },
+  {
+    "id": "birth_time_sensitivity",
+    "category": "reasoning",
+    "title": {
+      "en": "Birth-time sensitivity",
+      "iast": "Janma-k\u0101la s\u016bk\u1e63mat\u0101",
+      "devanagari": "\u091c\u0928\u094d\u092e-\u0938\u092e\u092f \u0938\u0942\u0915\u094d\u0937\u094d\u092e\u0924\u093e"
+    },
+    "summary": {
+      "en": "How much the chart changes if the birth time is uncertain.",
+      "iast": "How much the chart changes if the birth time is uncertain.",
+      "devanagari": "\u091c\u0928\u094d\u092e-\u0938\u092e\u092f \u092e\u0947\u0902 \u0924\u094d\u0930\u0941\u091f\u093f \u0938\u0947 \u0915\u0941\u0902\u0921\u0932\u0940 \u092e\u0947\u0902 \u0905\u0902\u0924\u0930"
+    },
+    "detail": "A birth moment recorded to the minute can be off by several minutes, and the lagna moves about 1\u00b0 every four minutes. K\u0101laYantra's sensitivity report re-computes the chart over a \u00b1span window and reports which facts are stable \u2014 the lagna sign, the running dasha lord, each graha's rashi, house and vargottama status \u2014 as stable_factors / unstable_factors so the reading's robustness is explicit.",
+    "formula": "for t in [\u2212span \u2026 +span]: recompute per-graha rashi/house/status; mark stable if unchanged across the whole window.",
+    "example": "With a \u00b15-minute window, Chandra is stable in Kumbha but the lagna sign flips at the boundary \u2014 both reported.",
+    "source": "Internal KalaBodha sensitivity analysis.",
+    "keywords": [
+      "sensitivity",
+      "birth time",
+      "uncertainty",
+      "stable",
+      "span",
+      "lagna stability"
+    ],
+    "see_also": [
+      "lagna",
+      "evidence_graph"
+    ]
+  }
+]
