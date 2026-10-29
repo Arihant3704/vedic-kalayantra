@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Radio, 
   ChevronRight, 
@@ -6,31 +6,73 @@ import {
   Clock, 
   Sparkles, 
   Calendar,
-  CheckCircle2
+  CheckCircle2,
+  Timer
 } from 'lucide-react';
 import { calculateVimshottariTree } from '../engine/dasha';
-import { DashaNode } from '../types/kalayantra';
+import { DashaNode, CityInfo, AyanamshaMode } from '../types/kalayantra';
+import { calculateGrahaSiderealPositions, formatDateDDMMYYYY } from '../engine/astronomy';
+import { BUILTIN_CITIES } from '../engine/kosha';
 
 interface DashaViewProps {
   birthDate: Date;
   moonLongitude: number;
   currentDate: Date;
+  selectedCity?: CityInfo;
+  ayanamsha?: AyanamshaMode;
 }
 
 export const DashaView: React.FC<DashaViewProps> = ({
   birthDate,
   moonLongitude,
   currentDate,
+  selectedCity,
+  ayanamsha = 'lahiri',
 }) => {
+  // Birth Date & Time state
+  const [birthDateTime, setBirthDateTime] = useState<Date>(birthDate);
+  // Target / Evaluation Date & Time state
+  const [targetDateTime, setTargetDateTime] = useState<Date>(currentDate);
+
+  // Sync if props change
+  useEffect(() => {
+    setBirthDateTime(birthDate);
+  }, [birthDate]);
+
+  useEffect(() => {
+    setTargetDateTime(currentDate);
+  }, [currentDate]);
+
+  // Compute exact sidereal Moon longitude based on birth date and birth time
+  const computedMoonLon = useMemo(() => {
+    try {
+      const city = selectedCity || BUILTIN_CITIES[0];
+      const { grahas } = calculateGrahaSiderealPositions(birthDateTime, city, ayanamsha);
+      const moon = (grahas as Record<number, { lon: number }>)[1];
+      if (moon && typeof moon.lon === 'number') {
+        return moon.lon;
+      }
+    } catch (e) {
+      // fallback
+    }
+    return moonLongitude;
+  }, [birthDateTime, selectedCity, ayanamsha, moonLongitude]);
+
   const dashaData = useMemo(() => {
-    return calculateVimshottariTree(birthDate, moonLongitude, currentDate);
-  }, [birthDate, moonLongitude, currentDate]);
+    return calculateVimshottariTree(birthDateTime, computedMoonLon, targetDateTime);
+  }, [birthDateTime, computedMoonLon, targetDateTime]);
 
   const [expandedMaha, setExpandedMaha] = useState<string | null>(dashaData.currentMahaDasha);
   const [expandedAntar, setExpandedAntar] = useState<string | null>(dashaData.currentAntarDasha);
 
+  // Keep expanded periods synced when target changes
+  useEffect(() => {
+    setExpandedMaha(dashaData.currentMahaDasha);
+    setExpandedAntar(dashaData.currentAntarDasha);
+  }, [dashaData.currentMahaDasha, dashaData.currentAntarDasha]);
+
   const formatDate = (d: Date) => {
-    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    return formatDateDDMMYYYY(d);
   };
 
   const toggleMaha = (lord: string) => {
@@ -41,8 +83,196 @@ export const DashaView: React.FC<DashaViewProps> = ({
     setExpandedAntar(prev => prev === lordKey ? null : lordKey);
   };
 
+  // Birth Time helper functions
+  const birthHours = birthDateTime.getHours();
+  const birthMinutes = birthDateTime.getMinutes();
+  const birthSeconds = birthDateTime.getSeconds();
+
+  const updateBirthTime = (newH: number, newM: number, newS: number) => {
+    const next = new Date(birthDateTime);
+    next.setHours(newH, newM, newS, 0);
+    setBirthDateTime(next);
+  };
+
+  const stepBirthMinutes = (offsetMins: number) => {
+    const next = new Date(birthDateTime.getTime() + offsetMins * 60000);
+    setBirthDateTime(next);
+  };
+
+  // Target Time helper functions
+  const targetHours = targetDateTime.getHours();
+  const targetMinutes = targetDateTime.getMinutes();
+
+  const stepTargetDays = (offsetDays: number) => {
+    const next = new Date(targetDateTime.getTime() + offsetDays * 86400000);
+    setTargetDateTime(next);
+  };
+
+  const stepTargetHours = (offsetHours: number) => {
+    const next = new Date(targetDateTime.getTime() + offsetHours * 3600000);
+    setTargetDateTime(next);
+  };
+
   return (
     <div className="space-y-6">
+      {/* 0. Birth Time & Target Evaluation Time Controls */}
+      <div className="bg-slate-900/90 border border-amber-500/30 rounded-2xl p-4 shadow-xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        {/* Birth Date & Time Bar */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
+            <Clock className="w-4 h-4 text-amber-400" />
+            <span>Birth Moment (Janma Kāla):</span>
+          </div>
+
+          {/* Birth Date */}
+          <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-700 rounded-lg px-2.5 py-1 text-xs">
+            <Calendar className="w-3.5 h-3.5 text-amber-400" />
+            <input
+              type="date"
+              value={birthDateTime.toISOString().split('T')[0]}
+              onChange={(e) => {
+                if (!e.target.value) return;
+                const [y, m, d] = e.target.value.split('-').map(Number);
+                const next = new Date(birthDateTime);
+                next.setFullYear(y, m - 1, d);
+                setBirthDateTime(next);
+              }}
+              className="bg-transparent text-slate-200 focus:outline-none font-mono cursor-pointer"
+            />
+            <span className="text-[11px] text-amber-300 font-mono font-medium ml-1">
+              ({formatDateDDMMYYYY(birthDateTime)})
+            </span>
+          </div>
+
+          {/* Birth Time HH:MM:SS */}
+          <div className="flex items-center gap-1 bg-slate-950/80 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono">
+            <span className="text-slate-400 text-[10px] uppercase font-bold mr-1">Time:</span>
+            <input
+              type="number"
+              min="0"
+              max="23"
+              value={birthHours.toString().padStart(2, '0')}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                updateBirthTime(isNaN(val) ? 0 : Math.min(23, Math.max(0, val)), birthMinutes, birthSeconds);
+              }}
+              className="w-7 bg-transparent text-center focus:bg-slate-800 rounded focus:outline-none text-amber-300 font-bold"
+              title="Birth Hour (00-23)"
+            />
+            <span className="text-slate-500">:</span>
+            <input
+              type="number"
+              min="0"
+              max="59"
+              value={birthMinutes.toString().padStart(2, '0')}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                updateBirthTime(birthHours, isNaN(val) ? 0 : Math.min(59, Math.max(0, val)), birthSeconds);
+              }}
+              className="w-7 bg-transparent text-center focus:bg-slate-800 rounded focus:outline-none text-amber-200"
+              title="Birth Minute (00-59)"
+            />
+            <span className="text-slate-500">:</span>
+            <input
+              type="number"
+              min="0"
+              max="59"
+              value={birthSeconds.toString().padStart(2, '0')}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                updateBirthTime(birthHours, birthMinutes, isNaN(val) ? 0 : Math.min(59, Math.max(0, val)));
+              }}
+              className="w-7 bg-transparent text-center focus:bg-slate-800 rounded focus:outline-none text-slate-400"
+              title="Birth Second (00-59)"
+            />
+          </div>
+
+          {/* Birth Steppers */}
+          <div className="flex items-center gap-1 text-xs">
+            <button
+              type="button"
+              onClick={() => stepBirthMinutes(-60)}
+              className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px]"
+              title="Back 1 hour"
+            >
+              -1h
+            </button>
+            <button
+              type="button"
+              onClick={() => stepBirthMinutes(-10)}
+              className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px]"
+              title="Back 10 minutes"
+            >
+              -10m
+            </button>
+            <button
+              type="button"
+              onClick={() => stepBirthMinutes(10)}
+              className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px]"
+              title="Forward 10 minutes"
+            >
+              +10m
+            </button>
+            <button
+              type="button"
+              onClick={() => stepBirthMinutes(60)}
+              className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px]"
+              title="Forward 1 hour"
+            >
+              +1h
+            </button>
+          </div>
+        </div>
+
+        {/* Target Evaluation Date & Time Picker */}
+        <div className="flex flex-wrap items-center gap-2 border-t md:border-t-0 md:border-l border-slate-800 pt-3 md:pt-0 md:pl-4">
+          <div className="text-xs text-slate-400 flex items-center gap-1.5 font-semibold">
+            <Timer className="w-3.5 h-3.5 text-blue-400" />
+            <span>Target:</span>
+          </div>
+          <div className="flex items-center gap-1 bg-slate-950/80 border border-slate-700 rounded-lg px-2 py-1 text-xs">
+            <input
+              type="date"
+              value={targetDateTime.toISOString().split('T')[0]}
+              onChange={(e) => {
+                if (!e.target.value) return;
+                const [y, m, d] = e.target.value.split('-').map(Number);
+                const next = new Date(targetDateTime);
+                next.setFullYear(y, m - 1, d);
+                setTargetDateTime(next);
+              }}
+              className="bg-transparent text-slate-200 focus:outline-none font-mono cursor-pointer"
+            />
+          </div>
+          <div className="flex items-center gap-1 text-xs">
+            <button
+              type="button"
+              onClick={() => stepTargetDays(-1)}
+              className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px]"
+              title="Back 1 day"
+            >
+              -1d
+            </button>
+            <button
+              type="button"
+              onClick={() => stepTargetDays(1)}
+              className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px]"
+              title="Forward 1 day"
+            >
+              +1d
+            </button>
+            <button
+              type="button"
+              onClick={() => setTargetDateTime(new Date())}
+              className="px-2 py-1 rounded bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[11px] font-semibold"
+              title="Reset to current time"
+            >
+              Now
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* 1. Active Running Dasha Highlight Hero */}
       <div className="bg-gradient-to-r from-slate-900 via-purple-950/40 to-slate-900 border border-purple-500/30 rounded-2xl p-5 shadow-xl relative overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -73,7 +303,7 @@ export const DashaView: React.FC<DashaViewProps> = ({
           <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-3 px-4 min-w-[220px] text-xs">
             <div className="text-slate-400 mb-1">Target Evaluation Date:</div>
             <div className="font-semibold text-slate-100 font-mono text-sm">
-              {formatDate(currentDate)}
+              {formatDate(targetDateTime)}
             </div>
             <div className="text-[11px] text-slate-500 mt-1">
               Sub-periods calculated to exact day precision

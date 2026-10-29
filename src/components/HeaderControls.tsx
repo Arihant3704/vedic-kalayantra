@@ -15,9 +15,12 @@ import {
   AyanamshaMode, 
   CityInfo, 
   Language, 
-  PanchangaMode 
+  PanchangaMode,
+  MonthSystem,
+  CalendarSystem
 } from '../types/kalayantra';
 import { BUILTIN_CITIES } from '../engine/kosha';
+import { formatDateDDMMYYYY } from '../engine/astronomy';
 
 interface HeaderControlsProps {
   currentDate: Date;
@@ -28,6 +31,10 @@ interface HeaderControlsProps {
   onModeChange: (mode: PanchangaMode) => void;
   ayanamsha: AyanamshaMode;
   onAyanamshaChange: (ayanamsha: AyanamshaMode) => void;
+  monthSystem: MonthSystem;
+  onMonthSystemChange: (monthSys: MonthSystem) => void;
+  calendarSystem: CalendarSystem;
+  onCalendarSystemChange: (calSys: CalendarSystem) => void;
   language: Language;
   onLanguageChange: (lang: Language) => void;
 }
@@ -41,6 +48,10 @@ export const HeaderControls: React.FC<HeaderControlsProps> = ({
   onModeChange,
   ayanamsha,
   onAyanamshaChange,
+  monthSystem,
+  onMonthSystemChange,
+  calendarSystem,
+  onCalendarSystemChange,
   language,
   onLanguageChange,
 }) => {
@@ -156,6 +167,9 @@ export const HeaderControls: React.FC<HeaderControlsProps> = ({
               }}
               className="bg-transparent text-slate-100 font-medium text-xs focus:outline-none cursor-pointer"
             />
+            <span className="text-[11px] text-amber-300 font-mono font-bold hidden sm:inline">
+              ({formatDateDDMMYYYY(currentDate)})
+            </span>
           </div>
 
           <button
@@ -216,6 +230,34 @@ export const HeaderControls: React.FC<HeaderControlsProps> = ({
               <option value="tropical" className="bg-slate-900 text-slate-100">Tropical (Sayana 0°)</option>
               <option value="true_citra" className="bg-slate-900 text-slate-100">True Chitra</option>
               <option value="fagan_bradley" className="bg-slate-900 text-slate-100">Fagan-Bradley</option>
+            </select>
+          </div>
+
+          {/* Month Reckoning System: Amavasyanta vs Purnimanta */}
+          <div className="flex items-center gap-1 bg-slate-800/80 border border-slate-700 rounded-lg px-2 py-1" title="Lunar Month Reckoning: Amāvāsyānta (South/West) vs Pūrṇimānta (North)">
+            <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Māsa:</span>
+            <select
+              value={monthSystem}
+              onChange={(e) => onMonthSystemChange(e.target.value as MonthSystem)}
+              className="bg-transparent text-slate-200 focus:outline-none cursor-pointer text-xs"
+            >
+              <option value="amavasyanta" className="bg-slate-900 text-slate-100">Amāvāsyānta (अमावास्यान्त)</option>
+              <option value="purnimanta" className="bg-slate-900 text-slate-100">Pūrṇimānta (पूर्णिमान्त)</option>
+            </select>
+          </div>
+
+          {/* Four Calendrical Systems */}
+          <div className="flex items-center gap-1 bg-slate-800/80 border border-slate-700 rounded-lg px-2 py-1" title="Calendrical Era System: Vikram Samvat, Vikram Kartak, Shalivahana Shaka, Saura">
+            <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Era:</span>
+            <select
+              value={calendarSystem}
+              onChange={(e) => onCalendarSystemChange(e.target.value as CalendarSystem)}
+              className="bg-transparent text-slate-200 focus:outline-none cursor-pointer text-xs"
+            >
+              <option value="vikram_samvat" className="bg-slate-900 text-slate-100">Vikram Samvat (Chaitradi)</option>
+              <option value="vikram_kartak" className="bg-slate-900 text-slate-100">Vikram Kartak (Kartikadi)</option>
+              <option value="shaka_samvat" className="bg-slate-900 text-slate-100">Shalivahana Shaka</option>
+              <option value="saura" className="bg-slate-900 text-slate-100">Saura (Solar / सौर)</option>
             </select>
           </div>
 

@@ -10,6 +10,8 @@ export type PanchangaMode = 'udaya' | 'current'; // Sunrise anchored vs Real-tim
 
 export type MonthSystem = 'amavasyanta' | 'purnimanta';
 
+export type CalendarSystem = 'vikram_samvat' | 'vikram_kartak' | 'shaka_samvat' | 'saura';
+
 export type ChartStyle = 'north' | 'south' | 'east';
 
 export type DivisionalChartId = 
@@ -44,6 +46,9 @@ export interface TithiInfo {
   percentElapsed?: number;
   isKshaya?: boolean;
   isVriddhi?: boolean;
+  kshayaTithiName?: string;
+  kshayaEndTime?: Date;
+  vriddhiNote?: string;
 }
 
 export interface NakshatraInfo {
@@ -120,9 +125,39 @@ export interface SolarDateInfo {
   dayOfMonth: number;
   shakaYear: number;
   vikramaSamvat: number;
+  vikramaKartakYear: number;
+  kaliYear: number;
   samvatsara: string;
+  samvatsaraNorth: string;
+  samvatsaraSouth: string;
   ayana: 'Uttarayana' | 'Dakshinayana';
   ritu: string;
+}
+
+export interface SuryaNakshatraInfo {
+  idx: number;
+  name: string;
+  pada: number;
+  degreeInPada: number;
+  lord: string;
+  deity: string;
+}
+
+export interface LagnaInfo {
+  rashi: string;
+  rashiIdx: number;
+  degreeInRashi: number;
+  formattedDegree: string;
+  lord: string;
+}
+
+export interface YearDetails {
+  shaka: number;
+  vikram: number;
+  vikramKartak: number;
+  kali: number;
+  samvatsara: string;
+  calendarSystemName: string;
 }
 
 export interface FestivalItem {
@@ -142,6 +177,8 @@ export interface PanchangaDay {
   date: Date;
   dateStr: string; // DD-MM-YYYY
   mode: PanchangaMode;
+  monthSystem: MonthSystem;
+  calendarSystem: CalendarSystem;
   ayanamshaMode: AyanamshaMode;
   ayanamshaValue: number;
   city: CityInfo;
@@ -158,6 +195,9 @@ export interface PanchangaDay {
   sunMoon: SunMoonTiming;
   traditionalTime: TraditionalTime;
   festivals: FestivalItem[];
+  suryaNakshatra: SuryaNakshatraInfo;
+  lagna: LagnaInfo;
+  years: YearDetails;
 }
 
 export interface HoraSlot {

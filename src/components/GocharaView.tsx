@@ -8,16 +8,19 @@ import {
   Share2, 
   CheckCircle, 
   AlertTriangle, 
-  Compass,
-  ArrowRight,
-  Bookmark,
-  BookmarkCheck,
-  Sparkles
+  Compass, 
+  ArrowRight, 
+  Bookmark, 
+  BookmarkCheck, 
+  Sparkles,
+  Clock,
+  Calendar
 } from 'lucide-react';
 import { CityInfo, AyanamshaMode, KundaliChartData } from '../types/kalayantra';
 import { calculateGochara } from '../engine/gochara';
 import { calculateKundali } from '../engine/kundali';
 import { RASHIS } from '../engine/kosha';
+import { formatDateDDMMYYYY } from '../engine/astronomy';
 import { 
   isTransitBookmarked, 
   toggleTransitBookmark, 
@@ -42,12 +45,30 @@ export const GocharaView: React.FC<GocharaViewProps> = ({
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [bookmarkUpdateTick, setBookmarkUpdateTick] = useState(0);
 
-  const transitChart: KundaliChartData = useMemo(() => {
-    return calculateKundali(currentDate, selectedCity, 'D1', ayanamsha);
-  }, [currentDate, selectedCity, ayanamsha]);
+  // Observation Date & Time state for exact Gochara moments
+  const [observationDateTime, setObservationDateTime] = useState<Date>(currentDate);
+  const [selectedMoonRashi, setSelectedMoonRashi] = useState<number>(propMoonRashi ?? 0);
+  const [selectedLagnaRashi, setSelectedLagnaRashi] = useState<number>(propLagnaRashi ?? 0);
 
-  const moonRashi = propMoonRashi !== undefined ? propMoonRashi : transitChart.grahas.find(g => g.id === 1)?.rashiIdx ?? 0;
-  const lagnaRashi = propLagnaRashi !== undefined ? propLagnaRashi : transitChart.lagnaRashiIdx;
+  // Sync when prop date changes
+  useEffect(() => {
+    setObservationDateTime(currentDate);
+  }, [currentDate]);
+
+  useEffect(() => {
+    if (propMoonRashi !== undefined) setSelectedMoonRashi(propMoonRashi);
+  }, [propMoonRashi]);
+
+  useEffect(() => {
+    if (propLagnaRashi !== undefined) setSelectedLagnaRashi(propLagnaRashi);
+  }, [propLagnaRashi]);
+
+  const transitChart: KundaliChartData = useMemo(() => {
+    return calculateKundali(observationDateTime, selectedCity, 'D1', ayanamsha);
+  }, [observationDateTime, selectedCity, ayanamsha]);
+
+  const moonRashi = selectedMoonRashi;
+  const lagnaRashi = selectedLagnaRashi;
 
   const gocharaResult = useMemo(() => {
     return calculateGochara(moonRashi, lagnaRashi, transitChart.grahas);
@@ -55,13 +76,29 @@ export const GocharaView: React.FC<GocharaViewProps> = ({
 
   const { sadeSati, ashtamaShani, kantakaShani, guruBenefic, grahas } = gocharaResult;
 
-  const dateISO = currentDate.toISOString().split('T')[0];
-  const displayDate = currentDate.toLocaleDateString('en-US', {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  const dateISO = observationDateTime.toISOString().split('T')[0];
+  const displayDate = formatDateDDMMYYYY(observationDateTime);
+
+  // Time component helpers
+  const hours = observationDateTime.getHours();
+  const minutes = observationDateTime.getMinutes();
+  const seconds = observationDateTime.getSeconds();
+
+  const updateObservationTime = (newH: number, newM: number, newS: number) => {
+    const next = new Date(observationDateTime);
+    next.setHours(newH, newM, newS, 0);
+    setObservationDateTime(next);
+  };
+
+  const stepHours = (offsetHours: number) => {
+    const next = new Date(observationDateTime.getTime() + offsetHours * 3600000);
+    setObservationDateTime(next);
+  };
+
+  const stepDays = (offsetDays: number) => {
+    const next = new Date(observationDateTime.getTime() + offsetDays * 86400000);
+    setObservationDateTime(next);
+  };
 
   useEffect(() => {
     const handleUpdate = () => {
@@ -160,6 +197,157 @@ export const GocharaView: React.FC<GocharaViewProps> = ({
           <span>{feedbackMessage}</span>
         </div>
       )}
+
+      {/* 0. Observation Date & Exact Time Bar with Steppers */}
+      <div className="bg-slate-900/90 border border-amber-500/30 rounded-2xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-4">
+        {/* Left: Date & Time Picker */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
+            <Clock className="w-4 h-4 text-amber-400" />
+            <span>Transit Moment:</span>
+          </div>
+
+          {/* Date Input */}
+          <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-700 rounded-lg px-2.5 py-1 text-xs">
+            <Calendar className="w-3.5 h-3.5 text-amber-400" />
+            <input
+              type="date"
+              value={observationDateTime.toISOString().split('T')[0]}
+              onChange={(e) => {
+                if (!e.target.value) return;
+                const [y, m, d] = e.target.value.split('-').map(Number);
+                const next = new Date(observationDateTime);
+                next.setFullYear(y, m - 1, d);
+                setObservationDateTime(next);
+              }}
+              className="bg-transparent text-slate-200 focus:outline-none font-mono cursor-pointer"
+            />
+            <span className="text-[11px] text-amber-300 font-mono font-medium ml-1">
+              ({formatDateDDMMYYYY(observationDateTime)})
+            </span>
+          </div>
+
+          {/* Time Input (HH:MM:SS) */}
+          <div className="flex items-center gap-1 bg-slate-950/80 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono">
+            <span className="text-slate-400 text-[10px] uppercase font-bold mr-1">Time:</span>
+            <input
+              type="number"
+              min="0"
+              max="23"
+              value={hours.toString().padStart(2, '0')}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                updateObservationTime(isNaN(val) ? 0 : Math.min(23, Math.max(0, val)), minutes, seconds);
+              }}
+              className="w-7 bg-transparent text-center focus:bg-slate-800 rounded focus:outline-none text-amber-300 font-bold"
+              title="Hour (00-23)"
+            />
+            <span className="text-slate-500">:</span>
+            <input
+              type="number"
+              min="0"
+              max="59"
+              value={minutes.toString().padStart(2, '0')}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                updateObservationTime(hours, isNaN(val) ? 0 : Math.min(59, Math.max(0, val)), seconds);
+              }}
+              className="w-7 bg-transparent text-center focus:bg-slate-800 rounded focus:outline-none text-amber-200"
+              title="Minute (00-59)"
+            />
+            <span className="text-slate-500">:</span>
+            <input
+              type="number"
+              min="0"
+              max="59"
+              value={seconds.toString().padStart(2, '0')}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                updateObservationTime(hours, minutes, isNaN(val) ? 0 : Math.min(59, Math.max(0, val)));
+              }}
+              className="w-7 bg-transparent text-center focus:bg-slate-800 rounded focus:outline-none text-slate-400"
+              title="Second (00-59)"
+            />
+          </div>
+
+          {/* Steppers */}
+          <div className="flex items-center gap-1 text-xs">
+            <button
+              type="button"
+              onClick={() => stepDays(-1)}
+              className="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors text-[11px]"
+              title="Back 1 day"
+            >
+              -1d
+            </button>
+            <button
+              type="button"
+              onClick={() => stepHours(-1)}
+              className="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors text-[11px]"
+              title="Back 1 hour"
+            >
+              -1h
+            </button>
+            <button
+              type="button"
+              onClick={() => stepHours(1)}
+              className="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors text-[11px]"
+              title="Forward 1 hour"
+            >
+              +1h
+            </button>
+            <button
+              type="button"
+              onClick={() => stepDays(1)}
+              className="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors text-[11px]"
+              title="Forward 1 day"
+            >
+              +1d
+            </button>
+            <button
+              type="button"
+              onClick={() => setObservationDateTime(new Date())}
+              className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-colors font-semibold text-[11px]"
+              title="Reset to now"
+            >
+              Now
+            </button>
+          </div>
+        </div>
+
+        {/* Right: Natal Reference Signs (Moon & Lagna) */}
+        <div className="flex items-center gap-3 text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-400 font-semibold">Janma Moon:</span>
+            <select
+              value={selectedMoonRashi}
+              onChange={(e) => setSelectedMoonRashi(Number(e.target.value))}
+              className="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-amber-300 font-semibold focus:outline-none"
+            >
+              {RASHIS.map((r, i) => (
+                <option key={r.idx} value={i} className="bg-slate-900 text-slate-100">
+                  {r.en} ({r.western})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-400 font-semibold">Lagna:</span>
+            <select
+              value={selectedLagnaRashi}
+              onChange={(e) => setSelectedLagnaRashi(Number(e.target.value))}
+              className="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-slate-200 font-medium focus:outline-none"
+            >
+              {RASHIS.map((r, i) => (
+                <option key={r.idx} value={i} className="bg-slate-900 text-slate-100">
+                  {r.en}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
 
       {/* 1. Sade Sati & Special Transits Hero */}
       <div className={`rounded-2xl p-5 border shadow-xl relative overflow-hidden ${

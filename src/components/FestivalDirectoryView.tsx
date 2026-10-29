@@ -8,11 +8,46 @@ import {
   Info,
   Clock
 } from 'lucide-react';
-import { FESTIVAL_METADATA } from '../engine/kosha';
+import { CityInfo, AyanamshaMode } from '../types/kalayantra';
+import { FESTIVAL_METADATA, DEFAULT_CITY } from '../engine/kosha';
+import { calculatePanchanga } from '../engine/panchanga';
+import { formatDateDDMMYYYY } from '../engine/astronomy';
 
-export const FestivalDirectoryView: React.FC = () => {
+interface FestivalDirectoryViewProps {
+  currentDate?: Date;
+  city?: CityInfo;
+  ayanamsha?: AyanamshaMode;
+}
+
+export const FestivalDirectoryView: React.FC<FestivalDirectoryViewProps> = ({
+  currentDate = new Date(),
+  city = DEFAULT_CITY,
+  ayanamsha = 'lahiri',
+}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('all');
+
+  // Pre-calculate Gregorian dates (DD-MM-YYYY) for all festivals in the active year
+  const festivalDatesMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    const refYear = currentDate.getFullYear();
+    const cityInfo = city || DEFAULT_CITY;
+    const ayan = ayanamsha || 'lahiri';
+
+    // Scan across the year to match festival rules to exact Gregorian dates
+    const start = new Date(refYear, 0, 1, 12, 0, 0);
+    for (let dayOffset = 0; dayOffset < 366; dayOffset++) {
+      const d = new Date(start.getTime() + dayOffset * 86400000);
+      if (d.getFullYear() !== refYear) break;
+      const p = calculatePanchanga(d, cityInfo, 'udaya', ayan);
+      for (const fest of p.festivals) {
+        if (!map[fest.id]) {
+          map[fest.id] = p.dateStr; // DD-MM-YYYY
+        }
+      }
+    }
+    return map;
+  }, [currentDate, city, ayanamsha]);
 
   const festivalsList = useMemo(() => {
     return Object.keys(FESTIVAL_METADATA).map(key => {
@@ -27,9 +62,10 @@ export const FestivalDirectoryView: React.FC = () => {
         priority: f.priority || 5,
         description: f.description || '',
         rule: f.rule || 'Tithi prevailing at Sunrise',
+        gregorianDate: festivalDatesMap[key],
       };
     });
-  }, []);
+  }, [festivalDatesMap]);
 
   const types = Array.from(new Set(festivalsList.map(f => f.type))).sort();
 
@@ -42,11 +78,14 @@ export const FestivalDirectoryView: React.FC = () => {
         f.nameIast.toLowerCase().includes(q) ||
         f.nameDevanagari.includes(q) ||
         f.description.toLowerCase().includes(q) ||
-        f.rule.toLowerCase().includes(q)
+        f.rule.toLowerCase().includes(q) ||
+        (f.gregorianDate && f.gregorianDate.includes(q))
       );
       return matchesType && matchesSearch;
     }).sort((a, b) => b.priority - a.priority);
   }, [festivalsList, selectedType, searchQuery]);
+
+  const activeYear = currentDate.getFullYear();
 
   return (
     <div className="space-y-6">
@@ -58,16 +97,16 @@ export const FestivalDirectoryView: React.FC = () => {
             Dharmaśāstra Festivals & Vratas
           </span>
           <span className="text-xs text-slate-400">
-            Authentic Festival Determination Rules & Priority Catalog
+            Gregorian Year {activeYear} Almanac Directory • {city.name}
           </span>
         </div>
 
         <h2 className="font-heading text-xl sm:text-2xl font-bold text-slate-100">
-          Classical Hindu Festival & Vrata Shastra Rules
+          Classical Hindu Festival & Vrata Shastra Directory ({activeYear})
         </h2>
 
         <p className="text-xs text-slate-300 mt-2 max-w-3xl leading-relaxed">
-          In Vedic Dharmaśāstra (Nirṇaya Sindhu, Dharma Sindhu), festivals are anchored not merely to Gregorian dates, but to the precise prevailing moment of the Tithi at special celestial markers (Aruṇodaya, Sunrise, Madhyāhna, Pradoṣa, Moonrise, or Niśītha).
+          In Vedic Dharmaśāstra (Nirṇaya Sindhu, Dharma Sindhu), festivals are anchored to precise Tithi moments (Aruṇodaya, Sunrise, Madhyāhna, Pradoṣa, Moonrise, or Niśītha). Below are all major observances with their calculated Gregorian dates (DD-MM-YYYY) and classical solver rules.
         </p>
       </div>
 
@@ -79,7 +118,7 @@ export const FestivalDirectoryView: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search festivals by name, vrata rule, deity (e.g. 'Ekadashi', 'Diwali', 'Janmashtami', 'Pradosha')..."
+            placeholder="Search festivals by name, date (DD-MM-YYYY), vrata rule, deity (e.g. 'Ekadashi', 'Diwali', '18-10-2026')..."
             className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 shadow-inner"
           />
         </div>
@@ -139,6 +178,19 @@ export const FestivalDirectoryView: React.FC = () => {
                 >
                   {fest.type}
                 </span>
+              </div>
+
+              {/* Gregorian Date Highlight (DD-MM-YYYY) */}
+              <div className="mb-2.5 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-[11px] text-slate-400 font-semibold">Gregorian Date:</span>
+                {fest.gregorianDate ? (
+                  <span className="text-xs font-mono font-bold text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded">
+                    {fest.gregorianDate}
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-slate-500 italic">Determined by Tithi</span>
+                )}
               </div>
 
               <p className="text-xs text-slate-300 leading-relaxed mb-3">

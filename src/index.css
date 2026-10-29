@@ -38,3 +38,46 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.45);
 }
+
+/* Print Optimization for Structured Report Printing */
+@media print {
+  @page {
+    margin: 12mm;
+    size: portrait;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt;
+  }
+
+  header,
+  footer,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+
+  .print-card {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    break-inside: avoid;
+    box-shadow: none !important;
+  }
+
+  .print-dark-text {
+    color: #0f172a !important;
+  }
+
+  .print-muted-text {
+    color: #475569 !important;
+  }
+
+  .print-accent {
+    color: #b45309 !important;
+    border-color: #d97706 !important;
+  }
+}
+

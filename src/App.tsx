@@ -4,7 +4,9 @@ import {
   CityInfo, 
   Language, 
   PanchangaDay, 
-  PanchangaMode 
+  PanchangaMode,
+  MonthSystem,
+  CalendarSystem
 } from './types/kalayantra';
 import { DEFAULT_CITY, BUILTIN_CITIES } from './engine/kosha';
 import { calculatePanchanga } from './engine/panchanga';
@@ -40,6 +42,8 @@ export default function App() {
   const [selectedCity, setSelectedCity] = useState<CityInfo>(DEFAULT_CITY);
   const [mode, setMode] = useState<PanchangaMode>('udaya');
   const [ayanamsha, setAyanamsha] = useState<AyanamshaMode>('lahiri');
+  const [monthSystem, setMonthSystem] = useState<MonthSystem>('amavasyanta');
+  const [calendarSystem, setCalendarSystem] = useState<CalendarSystem>('vikram_samvat');
   const [language, setLanguage] = useState<Language>('en');
   const [activeTab, setActiveTab] = useState<AppTab>('panchanga');
 
@@ -137,8 +141,8 @@ export default function App() {
 
   // Compute daily Panchanga
   const panchanga: PanchangaDay = useMemo(() => {
-    return calculatePanchanga(currentDate, selectedCity, mode, ayanamsha);
-  }, [currentDate, selectedCity, mode, ayanamsha]);
+    return calculatePanchanga(currentDate, selectedCity, mode, ayanamsha, monthSystem, calendarSystem);
+  }, [currentDate, selectedCity, mode, ayanamsha, monthSystem, calendarSystem]);
 
   // Jump to Panchanga from Saved items
   const handleNavigateToPanchanga = (date: Date, cityName?: string) => {
@@ -181,6 +185,10 @@ export default function App() {
         onModeChange={setMode}
         ayanamsha={ayanamsha}
         onAyanamshaChange={setAyanamsha}
+        monthSystem={monthSystem}
+        onMonthSystemChange={setMonthSystem}
+        calendarSystem={calendarSystem}
+        onCalendarSystemChange={setCalendarSystem}
         language={language}
         onLanguageChange={setLanguage}
       />
@@ -199,6 +207,8 @@ export default function App() {
             }}
             city={selectedCity}
             ayanamsha={ayanamsha}
+            monthSystem={monthSystem}
+            calendarSystem={calendarSystem}
             language={language}
           />
         )}
@@ -224,6 +234,8 @@ export default function App() {
             birthDate={currentDate}
             moonLongitude={panchanga.nakshatra.degreeInPada + (panchanga.nakshatra.idx * (360 / 27))}
             currentDate={liveTime}
+            selectedCity={selectedCity}
+            ayanamsha={ayanamsha}
           />
         )}
 
@@ -254,7 +266,11 @@ export default function App() {
         )}
 
         {activeTab === 'festivals' && (
-          <FestivalDirectoryView />
+          <FestivalDirectoryView 
+            currentDate={currentDate}
+            city={selectedCity}
+            ayanamsha={ayanamsha}
+          />
         )}
 
         {activeTab === 'mytithis' && (

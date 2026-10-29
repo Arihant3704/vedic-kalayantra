@@ -106,12 +106,23 @@ export function getTropicalLongitude(body: Astronomy.Body, time: Astronomy.Astro
 }
 
 /**
+ * Format a Date object in DD-MM-YYYY format
+ */
+export function formatDateDDMMYYYY(d: Date): string {
+  const day = d.getDate().toString().padStart(2, '0');
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}-${month}-${year}`;
+}
+
+/**
  * Calculate accurate Mean Lunar Node (Rahu) longitude
+ * In astronomy-engine, time.ut is the number of days elapsed since J2000.0 (JD 2451545.0)
  */
 export function getMeanRahuLongitude(time: Astronomy.AstroTime): { lon: number; speed: number } {
   // IAU formula for mean longitude of lunar ascending node (Omega)
-  const T = (time.ut - J2000_JD) / 36525.0;
-  let omega = 125.04452 - 1934.136261 * T + 0.0020708 * T * T + T * T * T / 450000.0;
+  const T = time.ut / 36525.0; // Julian centuries since J2000.0
+  let omega = 125.04452 - 1934.136261 * T + 0.0020708 * T * T + (T * T * T) / 450000.0;
   omega = normalize360(omega);
   const speed = -1934.136261 / 36525.0; // Retrograde ~ -0.05295 deg/day
   return { lon: omega, speed };
@@ -131,7 +142,7 @@ export function calculateLagna(date: Date, city: CityInfo, ayanamsha: number): {
   const lstRad = (lstDeg * Math.PI) / 180.0;
   
   // Obliquity of the Ecliptic (eps)
-  const T = (time.ut - J2000_JD) / 36525.0;
+  const T = time.ut / 36525.0; // Julian centuries since J2000.0
   const epsDeg = 23.4392911 - (46.8150 * T + 0.00059 * T * T - 0.001813 * T * T * T) / 3600.0;
   const epsRad = (epsDeg * Math.PI) / 180.0;
   

@@ -17,11 +17,13 @@ import {
   Bookmark,
   BookmarkCheck,
   X,
-  Edit3
+  Edit3,
+  Printer,
+  Sliders
 } from 'lucide-react';
 import { Language, PanchangaDay } from '../types/kalayantra';
-import { formatCityTime } from '../engine/astronomy';
-import { downloadPanchangaPDF } from '../engine/pdfExport';
+import { formatCityTime, formatDateDDMMYYYY } from '../engine/astronomy';
+import { downloadPanchangaPDF, ExportPanchangaPdfOptions } from '../engine/pdfExport';
 import { 
   isPanchangaBookmarked, 
   togglePanchangaBookmark, 
@@ -38,6 +40,11 @@ interface PanchangaViewProps {
 export const PanchangaView: React.FC<PanchangaViewProps> = ({ panchanga, language }) => {
   const [isExporting, setIsExporting] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [showPdfModal, setShowPdfModal] = useState(false);
+  const [pdfPaperSize, setPdfPaperSize] = useState<'a4' | 'letter'>('a4');
+  const [pdfIncludeGrahas, setPdfIncludeGrahas] = useState(true);
+  const [pdfIncludeChoghadiyas, setPdfIncludeChoghadiyas] = useState(true);
+  const [pdfNotes, setPdfNotes] = useState('');
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [noteInput, setNoteInput] = useState('');
@@ -91,12 +98,7 @@ export const PanchangaView: React.FC<PanchangaViewProps> = ({ panchanga, languag
     }
 
     // Build rich bookmark details
-    const formattedDate = panchanga.date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+    const formattedDate = `${formatDateDDMMYYYY(panchanga.date)} (${panchanga.date.toLocaleDateString('en-US', { weekday: 'long' })})`;
 
     const festNames = festivals && festivals.length > 0 ? festivals.map((f) => f.name) : [];
 
@@ -166,20 +168,27 @@ export const PanchangaView: React.FC<PanchangaViewProps> = ({ panchanga, languag
     return formatCityTime(d, city.tz, true);
   };
 
-  const handleDownloadPDF = async () => {
+  const handleDownloadPDF = async (customOpts?: Partial<ExportPanchangaPdfOptions>) => {
     try {
       setIsExporting(true);
-      // Small timeout to allow UI loading state to render smoothly
       setTimeout(() => {
-        downloadPanchangaPDF(panchanga, language);
+        downloadPanchangaPDF(panchanga, language, customOpts);
         setIsExporting(false);
         setDownloadSuccess(true);
+        setShowPdfModal(false);
         setTimeout(() => setDownloadSuccess(false), 3000);
       }, 50);
     } catch (err) {
       console.error('Failed to generate PDF:', err);
       setIsExporting(false);
     }
+  };
+
+  const handlePrintBrowser = () => {
+    setShowPdfModal(false);
+    setTimeout(() => {
+      window.print();
+    }, 100);
   };
 
   return (
@@ -192,7 +201,7 @@ export const PanchangaView: React.FC<PanchangaViewProps> = ({ panchanga, languag
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <span className="text-xs bg-amber-500/20 text-amber-300 font-semibold px-2.5 py-0.5 rounded-full border border-amber-500/40">
-                {panchanga.lunarMonth} Māsa
+                {panchanga.lunarMonth} Māsa ({panchanga.monthSystem === 'amavasyanta' ? 'Amāvāsyānta' : 'Pūrṇimānta'})
               </span>
               <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full border border-slate-700">
                 {tithi.paksha} Pakṣa
@@ -203,19 +212,47 @@ export const PanchangaView: React.FC<PanchangaViewProps> = ({ panchanga, languag
               <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full border border-slate-700">
                 {solar.ritu}
               </span>
+              {tithi.isVriddhi && (
+                <span className="text-xs bg-emerald-500/20 text-emerald-300 font-bold px-2.5 py-0.5 rounded-full border border-emerald-500/40 animate-pulse">
+                  Vṛddhi Tithi (वृद्धि)
+                </span>
+              )}
+              {tithi.isKshaya && (
+                <span className="text-xs bg-rose-500/20 text-rose-300 font-bold px-2.5 py-0.5 rounded-full border border-rose-500/40">
+                  Kṣaya: {tithi.kshayaTithiName} (क्षय)
+                </span>
+              )}
             </div>
 
-            <h2 className="font-heading text-xl sm:text-2xl font-bold text-amber-100 flex items-center gap-2">
-              <span>{panchanga.lunarMonth} {tithi.name}</span>
-              <span className="text-sm font-normal text-slate-400">({solar.sauraMasa}, Day {solar.dayOfMonth})</span>
+            <h2 className="font-heading text-xl sm:text-2xl font-bold text-amber-100 flex flex-wrap items-center gap-2">
+              <span>{panchanga.lunarMonth} {tithi.paksha} {tithi.name}</span>
+              <span className="text-sm font-normal text-slate-400">({solar.sauraMasa}, Day {solar.dayOfMonth} • <span className="font-mono text-amber-300 font-semibold">{formatDateDDMMYYYY(panchanga.date)}</span>)</span>
             </h2>
 
-            <div className="text-xs text-slate-400 mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
-              <span>Śaka: <strong className="text-slate-200">{solar.shakaYear} ({solar.samvatsara})</strong></span>
+            {/* Display All Three Epoch Years: Shaka, Vikram, Kali & Selected Samvatsara */}
+            <div className="text-xs text-slate-400 mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 bg-slate-950/40 px-3 py-1.5 rounded-lg border border-slate-800/80">
+              <span>
+                Śaka Year: <strong className="text-amber-200">{panchanga.years?.shaka ?? solar.shakaYear}</strong>
+              </span>
               <span>•</span>
-              <span>Vikrama Saṃvat: <strong className="text-slate-200">{solar.vikramaSamvat}</strong></span>
+              <span>
+                Vikrama Saṃvat: <strong className="text-amber-200">{panchanga.years?.vikram ?? solar.vikramaSamvat}</strong>
+                {panchanga.calendarSystem === 'vikram_kartak' && (
+                  <span className="text-[11px] text-slate-400 ml-1">(Kārtakadi: {panchanga.years?.vikramKartak})</span>
+                )}
+              </span>
               <span>•</span>
-              <span>Ayanāṃśa: <strong className="text-amber-300">{ayanamshaMode} ({ayanamshaValue.toFixed(4)}°)</strong></span>
+              <span>
+                Kali Yuga: <strong className="text-amber-200">{panchanga.years?.kali ?? solar.kaliYear}</strong>
+              </span>
+              <span>•</span>
+              <span>
+                Saṃvatsara: <strong className="text-amber-300">{panchanga.years?.samvatsara ?? solar.samvatsara}</strong>
+              </span>
+              <span>•</span>
+              <span>
+                Ayanāṃśa: <strong className="text-slate-300">{ayanamshaMode} ({ayanamshaValue.toFixed(4)}°)</strong>
+              </span>
             </div>
           </div>
 
@@ -238,36 +275,52 @@ export const PanchangaView: React.FC<PanchangaViewProps> = ({ panchanga, languag
               </div>
 
               <div className="flex items-center gap-2">
-                {/* Download PDF Action Button */}
-                <button
-                  onClick={handleDownloadPDF}
-                  disabled={isExporting}
-                  title="Download daily Vedic Panchanga astrological almanac as a PDF document"
-                  className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-3 sm:py-3.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 shadow-md border cursor-pointer select-none whitespace-nowrap ${
-                    downloadSuccess
-                      ? 'bg-emerald-600/90 text-white border-emerald-400/50 shadow-emerald-900/30'
-                      : isExporting
-                      ? 'bg-amber-600/50 text-amber-100 border-amber-500/40 opacity-80 cursor-wait'
-                      : 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 border-amber-300 shadow-amber-500/20 hover:shadow-amber-500/30 active:scale-[0.98]'
-                  }`}
-                >
-                  {isExporting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
-                      <span>Preparing PDF...</span>
-                    </>
-                  ) : downloadSuccess ? (
-                    <>
-                      <Check className="w-4 h-4 text-white" />
-                      <span>PDF Downloaded</span>
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-4 h-4 text-slate-950" />
-                      <span>Download PDF</span>
-                    </>
-                  )}
-                </button>
+                {/* Download as PDF Action Button Group */}
+                <div className="flex items-center rounded-xl shadow-md overflow-hidden border border-amber-300">
+                  <button
+                    onClick={() => handleDownloadPDF({ 
+                      paperSize: pdfPaperSize, 
+                      includeGrahas: pdfIncludeGrahas, 
+                      includeChoghadiyas: pdfIncludeChoghadiyas, 
+                      notes: pdfNotes 
+                    })}
+                    disabled={isExporting}
+                    title="Download daily Vedic Panchanga astrological almanac as a PDF document"
+                    className={`flex items-center justify-center gap-2 px-3.5 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer select-none whitespace-nowrap ${
+                      downloadSuccess
+                        ? 'bg-emerald-600 text-white'
+                        : isExporting
+                        ? 'bg-amber-600/50 text-amber-100 opacity-80 cursor-wait'
+                        : 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 active:scale-[0.98]'
+                    }`}
+                  >
+                    {isExporting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                        <span>Preparing PDF...</span>
+                      </>
+                    ) : downloadSuccess ? (
+                      <>
+                        <Check className="w-4 h-4 text-white" />
+                        <span>PDF Downloaded</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4 text-slate-950" />
+                        <span>Download as PDF</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => setShowPdfModal(true)}
+                    title="Configure PDF format, paper size, and print options"
+                    className="px-2.5 py-3 sm:py-3.5 bg-amber-600 hover:bg-amber-500 text-slate-950 border-l border-amber-400/60 transition-colors cursor-pointer flex items-center justify-center"
+                    aria-label="PDF export and print options"
+                  >
+                    <Sliders className="w-4 h-4" />
+                  </button>
+                </div>
 
                 {/* Bookmark Date Action Button */}
                 <button
@@ -371,6 +424,194 @@ export const PanchangaView: React.FC<PanchangaViewProps> = ({ panchanga, languag
           </div>
         )}
 
+        {/* Structured PDF Export & Print Options Modal */}
+        {showPdfModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in">
+            <div className="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl shadow-black/80 space-y-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold font-heading text-slate-100 flex items-center gap-1.5">
+                      Download as PDF & Print
+                      <span className="text-xs font-normal text-amber-400 font-indic">(पञ्चाङ्ग-मुद्रण)</span>
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      Export structured Vedic report for {panchanga.dateStr} • {city.name}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowPdfModal(false)}
+                  className="text-slate-400 hover:text-slate-200 p-1 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Quick Summary Card */}
+              <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-1.5 text-xs">
+                <div className="flex items-center justify-between text-slate-400">
+                  <span className="font-semibold text-slate-200">{panchanga.lunarMonth} Māsa • {tithi.paksha} Pakṣa</span>
+                  <span>Śaka {solar.shakaYear} ({solar.samvatsara})</span>
+                </div>
+                <div className="text-slate-300 font-medium">
+                  {tithi.name} • {nakshatra.name} (Pada {nakshatra.pada}) • {yoga.name} • {vaara.name}
+                </div>
+                <div className="text-[11px] text-slate-500 flex items-center gap-2">
+                  <span>Sunrise: {formatTime(sunMoon.sunrise)}</span>
+                  <span>•</span>
+                  <span>Sunset: {formatTime(sunMoon.sunset)}</span>
+                  <span>•</span>
+                  <span>Ayanāṃśa: {ayanamshaMode}</span>
+                </div>
+              </div>
+
+              {/* Format Options */}
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="text-[11px] uppercase tracking-wider font-bold text-slate-300 block mb-1.5">
+                    Paper Size & Margins
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPdfPaperSize('a4')}
+                      className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
+                        pdfPaperSize === 'a4'
+                          ? 'border-amber-500 bg-amber-500/15 text-amber-200'
+                          : 'border-slate-800 bg-slate-950/40 text-slate-400 hover:bg-slate-800'
+                      }`}
+                    >
+                      <div className="font-semibold text-xs">A4 (Standard)</div>
+                      <div className="text-[10px] text-slate-400">210 × 297 mm • International standard</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPdfPaperSize('letter')}
+                      className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
+                        pdfPaperSize === 'letter'
+                          ? 'border-amber-500 bg-amber-500/15 text-amber-200'
+                          : 'border-slate-800 bg-slate-950/40 text-slate-400 hover:bg-slate-800'
+                      }`}
+                    >
+                      <div className="font-semibold text-xs">US Letter</div>
+                      <div className="text-[10px] text-slate-400">8.5 × 11 in • North America standard</div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Additional Sections to Include */}
+                <div className="space-y-2 pt-1">
+                  <label className="text-[11px] uppercase tracking-wider font-bold text-slate-300 block">
+                    Report Content & Sections
+                  </label>
+                  
+                  <div className="p-3 rounded-xl bg-slate-950/40 border border-slate-800/80 space-y-2.5">
+                    <div className="flex items-center gap-2 text-slate-400 text-[11px]">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>Page 1: Five Limbs (Pañcāṅga), Horizons, Vedic Clock & Muhūrtas</span>
+                    </div>
+
+                    <label className="flex items-center gap-2.5 cursor-pointer select-none text-slate-200">
+                      <input
+                        type="checkbox"
+                        checked={pdfIncludeGrahas}
+                        onChange={(e) => setPdfIncludeGrahas(e.target.checked)}
+                        className="w-4 h-4 rounded text-amber-500 accent-amber-500 bg-slate-800 border-slate-700"
+                      />
+                      <div>
+                        <div className="font-semibold">Include Planetary Ephemeris (Graha Spaṣṭa)</div>
+                        <div className="text-[11px] text-slate-400">
+                          Exact sidereal degrees, zodiac signs, motion speed & retrograde status for all 9 Grahas
+                        </div>
+                      </div>
+                    </label>
+
+                    <label className="flex items-center gap-2.5 cursor-pointer select-none text-slate-200">
+                      <input
+                        type="checkbox"
+                        checked={pdfIncludeChoghadiyas}
+                        onChange={(e) => setPdfIncludeChoghadiyas(e.target.checked)}
+                        className="w-4 h-4 rounded text-amber-500 accent-amber-500 bg-slate-800 border-slate-700"
+                      />
+                      <div>
+                        <div className="font-semibold">Include Day & Night Choghaḍiyā Cycles</div>
+                        <div className="text-[11px] text-slate-400">
+                          All 16 daytime and nighttime 8-fold Choghadiya Muhurtas with auspiciousness
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Custom User Notes */}
+                <div>
+                  <label className="text-[11px] uppercase tracking-wider font-bold text-slate-300 block mb-1">
+                    Custom Notes / Saṅkalpa (Optional)
+                  </label>
+                  <textarea
+                    value={pdfNotes}
+                    onChange={(e) => setPdfNotes(e.target.value)}
+                    placeholder="e.g., Special family Sankalpa, temple vrata, or personal notes to print on the report..."
+                    rows={2}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-amber-500/60"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2.5">
+                <button
+                  type="button"
+                  onClick={handlePrintBrowser}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition cursor-pointer"
+                >
+                  <Printer className="w-4 h-4 text-amber-400" />
+                  <span>Print via Browser</span>
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPdfModal(false)}
+                    className="px-3 py-2 text-xs text-slate-400 hover:text-slate-200 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadPDF({
+                      paperSize: pdfPaperSize,
+                      includeGrahas: pdfIncludeGrahas,
+                      includeChoghadiyas: pdfIncludeChoghadiyas,
+                      notes: pdfNotes.trim(),
+                    })}
+                    disabled={isExporting}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 text-slate-950 font-bold text-xs shadow-md transition cursor-pointer select-none"
+                  >
+                    {isExporting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                        <span>Generating PDF...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4 text-slate-950" />
+                        <span>Download as PDF</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       {/* 2. Active Festivals & Observances */}
       {festivals.length > 0 && (
         <div className="space-y-2">
@@ -386,17 +627,22 @@ export const PanchangaView: React.FC<PanchangaViewProps> = ({ panchanga, languag
                 style={{ borderColor: `${fest.color}40` }}
               >
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span 
-                      className="w-2.5 h-2.5 rounded-full inline-block"
-                      style={{ backgroundColor: fest.color }}
-                    />
-                    <h3 className="font-heading font-bold text-sm text-slate-100">{fest.name}</h3>
-                    <span 
-                      className="text-[10px] px-2 py-0.5 rounded font-semibold uppercase"
-                      style={{ backgroundColor: `${fest.color}20`, color: fest.color }}
-                    >
-                      {fest.type}
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                    <div className="flex items-center gap-2">
+                      <span 
+                        className="w-2.5 h-2.5 rounded-full inline-block"
+                        style={{ backgroundColor: fest.color }}
+                      />
+                      <h3 className="font-heading font-bold text-sm text-slate-100">{fest.name}</h3>
+                      <span 
+                        className="text-[10px] px-2 py-0.5 rounded font-semibold uppercase"
+                        style={{ backgroundColor: `${fest.color}20`, color: fest.color }}
+                      >
+                        {fest.type}
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-mono text-amber-300 font-semibold bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded">
+                      {formatDateDDMMYYYY(panchanga.date)}
                     </span>
                   </div>
                   <p className="text-xs text-slate-300">{fest.description}</p>
@@ -412,6 +658,37 @@ export const PanchangaView: React.FC<PanchangaViewProps> = ({ panchanga, languag
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Kshaya & Vriddhi Tithi Astrological Notice */}
+      {(tithi.isVriddhi || tithi.isKshaya) && (
+        <div className={`p-4 rounded-xl border flex items-start gap-3 shadow-md ${
+          tithi.isVriddhi 
+            ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200' 
+            : 'bg-rose-950/30 border-rose-500/40 text-rose-200'
+        }`}>
+          <AlertTriangle className={`w-5 h-5 shrink-0 mt-0.5 ${tithi.isVriddhi ? 'text-emerald-400' : 'text-rose-400'}`} />
+          <div className="text-xs space-y-1">
+            <div className="font-bold text-sm font-heading flex items-center gap-2">
+              <span>{tithi.isVriddhi ? 'Vṛddhi Tithi (वृद्धि तिथि — Repeated Lunar Day)' : 'Kṣaya Tithi (क्षय तिथि — Omitted Lunar Day)'}</span>
+            </div>
+            {tithi.isVriddhi && (
+              <p className="text-slate-300">
+                Today's tithi ({tithi.paksha} {tithi.name}) prevails across two consecutive sunrises. The same tithi is observed on consecutive civil days according to Udaya-vyāpinī Siddhānta.
+              </p>
+            )}
+            {tithi.isKshaya && (
+              <p className="text-slate-300">
+                A lunar tithi <strong className="text-rose-300 font-semibold">{tithi.kshayaTithiName}</strong> started after today's sunrise and terminates before tomorrow's sunrise without touching any sunrise (omitted civil day).
+                {tithi.kshayaEndTime && (
+                  <span className="block text-[11px] text-slate-400 mt-0.5">
+                    Kṣaya tithi ends at: <span className="font-mono text-slate-200">{formatTime(tithi.kshayaEndTime)}</span>
+                  </span>
+                )}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -435,9 +712,19 @@ export const PanchangaView: React.FC<PanchangaViewProps> = ({ panchanga, languag
                   {tithi.paksha} {tithi.tithiInPaksha}
                 </span>
               </div>
-              <div className="font-heading text-lg font-bold text-slate-100 mt-1">
-                {tithi.name}
+              <div className="font-heading text-lg font-bold text-slate-100 mt-1 flex items-center gap-1.5">
+                <span>{tithi.name}</span>
+                {tithi.isVriddhi && (
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30">
+                    Vṛddhi
+                  </span>
+                )}
               </div>
+              {tithi.isKshaya && (
+                <div className="text-[10px] text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/30 mt-1">
+                  Kṣaya: {tithi.kshayaTithiName}
+                </div>
+              )}
               <div className="text-xs text-slate-400 mt-1">
                 Deity: <strong className="text-slate-200">{tithi.deity}</strong>
               </div>
@@ -590,6 +877,70 @@ export const PanchangaView: React.FC<PanchangaViewProps> = ({ panchanga, languag
 
             <div className="mt-4 pt-3 border-t border-slate-800/80 text-xs text-slate-400">
               Starts at Sunrise ({formatTime(sunMoon.sunrise)})
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Surya Nakshatra & Lagna (Solar Constellation & Ascendant) */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-amber-400">
+          <span>Key Astrological Coordinates (Sūrya Nakṣatra & Lagna)</span>
+          <span className="text-slate-400 font-normal lowercase">
+            Vedic Zodiac Markers
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Surya Nakshatra */}
+          <div className="bg-slate-900/80 border border-slate-800 hover:border-amber-500/40 rounded-xl p-4 transition-colors flex items-center justify-between shadow-md">
+            <div>
+              <div className="flex items-center gap-2 text-xs text-amber-400 mb-1">
+                <Sun className="w-4 h-4 text-amber-400" />
+                <span className="font-semibold uppercase tracking-wider">Sūrya Nakṣatra (Solar Constellation)</span>
+              </div>
+              <div className="font-heading text-lg font-bold text-slate-100 mt-1">
+                {panchanga.suryaNakshatra?.name || 'Ashwini'}
+                <span className="text-xs font-normal text-amber-300 ml-2">
+                  (Pāda {panchanga.suryaNakshatra?.pada || 1})
+                </span>
+              </div>
+              <div className="text-xs text-slate-400 mt-1 flex items-center gap-3">
+                <span>Lord: <strong className="text-slate-200">{panchanga.suryaNakshatra?.lord || 'Ketu'}</strong></span>
+                <span>•</span>
+                <span>Deity: <span className="text-slate-300">{panchanga.suryaNakshatra?.deity || 'Ashvins'}</span></span>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-xs bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-lg font-mono">
+                Nak #{((panchanga.suryaNakshatra?.idx ?? 0) + 1)}/27
+              </span>
+            </div>
+          </div>
+
+          {/* Lagna (Ascendant) */}
+          <div className="bg-slate-900/80 border border-slate-800 hover:border-amber-500/40 rounded-xl p-4 transition-colors flex items-center justify-between shadow-md">
+            <div>
+              <div className="flex items-center gap-2 text-xs text-amber-400 mb-1">
+                <Compass className="w-4 h-4 text-amber-400" />
+                <span className="font-semibold uppercase tracking-wider">Lagna (Udaya Lagna / Ascendant)</span>
+              </div>
+              <div className="font-heading text-lg font-bold text-slate-100 mt-1">
+                {panchanga.lagna?.rashi || 'Mesha'}
+                <span className="text-xs font-mono font-normal text-amber-300 ml-2">
+                  {panchanga.lagna?.formattedDegree || '0° 00\''}
+                </span>
+              </div>
+              <div className="text-xs text-slate-400 mt-1 flex items-center gap-3">
+                <span>Lagna Lord: <strong className="text-slate-200">{panchanga.lagna?.lord || 'Mangala'}</strong></span>
+                <span>•</span>
+                <span>Observation: <span className="text-slate-300">{mode === 'udaya' ? 'Sunrise Lagna' : 'Current Lagna'}</span></span>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-xs bg-blue-500/10 text-blue-300 border border-blue-500/30 px-2.5 py-1 rounded-lg font-semibold">
+                Rāśi #{((panchanga.lagna?.rashiIdx ?? 0) + 1)}/12
+              </span>
             </div>
           </div>
         </div>

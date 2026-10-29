@@ -411,7 +411,9 @@ export const SavedView: React.FC<SavedViewProps> = ({
                       )}
 
                       <span className="text-xs font-mono text-amber-300/90 font-medium">
-                        {bm.displayDate}
+                        {bm.dateISO && /^\d{4}-\d{2}-\d{2}$/.test(bm.dateISO)
+                          ? `${bm.dateISO.split('-')[2]}-${bm.dateISO.split('-')[1]}-${bm.dateISO.split('-')[0]}`
+                          : bm.displayDate}
                       </span>
                     </div>
 

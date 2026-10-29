@@ -184,12 +184,16 @@ export function getGrahaDignity(
     isTempFriend = [1, 2, 3, 9, 10, 11].includes(dist);
   }
 
-  // Combine Natural + Temporary (Panchadha Maitri)
-  if (isNatFriend && isTempFriend) return { dignity: 'Great Friend', color: '#0284c7' };
-  if (isNatFriend || isTempFriend) return { dignity: 'Friend', color: '#0ea5e9' };
-  if (isNatEnemy && !isTempFriend) return { dignity: 'Great Enemy', color: '#dc2626' };
-  if (isNatEnemy) return { dignity: 'Neutral', color: '#94a3b8' };
-  return { dignity: 'Neutral', color: '#94a3b8' };
+  // Combine Natural + Temporary (Pañcadhā Maitrī)
+  const natScore = isNatFriend ? 1 : (isNatEnemy ? -1 : 0);
+  const tempScore = isTempFriend ? 1 : -1;
+  const totalScore = natScore + tempScore;
+
+  if (totalScore === 2) return { dignity: 'Great Friend', color: '#0284c7' }; // Adhi Mitra (+2)
+  if (totalScore === 1) return { dignity: 'Friend', color: '#0ea5e9' };       // Mitra (+1)
+  if (totalScore === 0) return { dignity: 'Neutral', color: '#94a3b8' };      // Sama (0)
+  if (totalScore === -1) return { dignity: 'Enemy', color: '#f97316' };       // Shatru (-1)
+  return { dignity: 'Great Enemy', color: '#dc2626' };                        // Adhi Shatru (-2)
 }
 
 /**
@@ -213,21 +217,32 @@ export function isCombustBySun(grahaId: number, grahaLon: number, sunLon: number
 }
 
 /**
- * Calculate Jaimini Chara Karakas (AK through DK)
+ * Calculate classical Jaimini 7-Chara Karakas (Sapta Karaka: AK through DK)
+ * Evaluates only the 7 physical Grahas (Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn)
+ * in descending order of longitudinal advancement in their respective rashis.
  */
 export function calculateCharaKarakas(
   grahaList: { id: number; degInRashi: number }[]
 ): Record<number, string> {
-  // Exclude Ketu (and Maandi); include Rahu by reversing degree: 30 - deg
+  // Classical 7-Karaka system: Only 7 planets (0..6), strictly excluding Rahu, Ketu, and Maandi
   const eligible = grahaList
-    .filter(g => [0, 1, 2, 3, 4, 5, 6, 7].includes(g.id))
+    .filter(g => [0, 1, 2, 3, 4, 5, 6].includes(g.id))
     .map(g => ({
       id: g.id,
-      effDeg: g.id === 7 ? 30.0 - g.degInRashi : g.degInRashi,
+      degInRashi: g.degInRashi,
     }))
-    .sort((a, b) => b.effDeg - a.effDeg);
+    .sort((a, b) => b.degInRashi - a.degInRashi);
 
-  const labels = ['AK (Ātmakāraka)', 'AmK (Amātyakāraka)', 'BK (Bhrātṛkāraka)', 'MK (Mātṛkāraka)', 'PiK (Pitṛkāraka)', 'PK (Putrakāraka)', 'GK (Jñātikāraka)', 'DK (Dārākāraka)'];
+  const labels = [
+    'AK (Ātmakāraka)',
+    'AmK (Amātyakāraka)',
+    'BK (Bhrātṛkāraka)',
+    'MK (Mātṛkāraka)',
+    'PK (Putrakāraka)',
+    'GK (Jñātikāraka)',
+    'DK (Dārākāraka)',
+  ];
+
   const res: Record<number, string> = {};
   eligible.forEach((item, idx) => {
     if (idx < labels.length) {
